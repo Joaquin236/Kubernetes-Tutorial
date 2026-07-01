@@ -587,3 +587,9 @@ nginx-deployment-75fdcbbc74-sqrwk   1/1     Running   0               7m20s
 nginx-deployment-75fdcbbc74-zb47w   1/1     Running   0               7m20s
 test                                1/1     Running   2 (3h59m ago)   5h59m
 test2                               1/1     Running   1 (3h59m ago)   8h
+
+kubectl get deployments.apps
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           10m
+
+## Estos comandos muestran que el deployment está operativo tras crearlo
