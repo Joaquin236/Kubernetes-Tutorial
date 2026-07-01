@@ -593,3 +593,13 @@ NAME               READY   UP-TO-DATE   AVAILABLE   AGE
 nginx-deployment   3/3     3            3           10m
 
 ## Estos comandos muestran que el deployment está operativo tras crearlo
+
+## 13.2º Con el comando kubectl create se puede crear el deploy con un diseño manual
+kubectl create deployment nginx-cli --image=nginx:apline
+
+kubectl get deployments.apps
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-cli          0/1     1            0           19s
+nginx-deployment   3/3     3            3           16m
+
+## 13.3º El fichero deployment.yaml se puede modificar para realizar un escalado y adaptación de los servicios
