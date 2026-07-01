@@ -603,3 +603,73 @@ nginx-cli          0/1     1            0           19s
 nginx-deployment   3/3     3            3           16m
 
 ## 13.3º El fichero deployment.yaml se puede modificar para realizar un escalado y adaptación de los servicios
+nano deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx 
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+kubectl apply -f deployment.yaml
+deployment.apps/nginx-deployment configured
+El sistema identifica cuando hay que crear, modificar o borrar
+
+## 13.4º Si necesitamos editar un deploy que está en ejecución usamos:
+kubectl edit deployment.apps ngingx-cli
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2026-07-01T15:38:56Z"
+  generation: 1
+  labels:
+    app: nginx-cli
+  name: nginx-cli
+  namespace: default
+  resourceVersion: "18546"
+  uid: d282071a-79a6-4d73-b95c-2cf3f726520e
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1 --> 3
+  revisionHistoryLimit: 10
+  selector:  
+    matchLabels:
+      app: nginx-cli
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:  
+    metadata:
+      labels:
+        app: nginx-cli
+La línea de replicas empezó con 1, lo ampliamos a 3
+kubectl edit deployments.apps nginx-cli
+deployment.apps/nginx-cli edited
+
+## 13.5 Si la carga de trabajo cambia y necesitamos reducir el número de replicas se realizará una escalada decremental:
+kubectl scale deployment nginx-deployment --replicas=2
+
+## 13.6 En caso de necesitar una recuperación del servicio, verificar las versiones, usaremos:
+kubectl rollout history deployment nginx-deployment
+deployment.apps/nginx-deployment 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
