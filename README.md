@@ -551,3 +551,39 @@ test   1/1     Running   0          30s
 kubectl config set-context minikube --namespace=default
 Context "minikube" modified.
 
+## 13.1º Creamos una estrcutura para el deployment
+nano deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        
+kubectl apply -f deployment.yaml 
+deployment.apps/nginx-deployment created
+
+kubectl get nodes ; kubectl get pods
+NAME       STATUS   ROLES           AGE   VERSION
+minikube   Ready    control-plane   19h   v1.35.1
+NAME                                READY   STATUS    RESTARTS        AGE
+nginx-deployment-75fdcbbc74-lm2wj   1/1     Running   0               7m20s
+nginx-deployment-75fdcbbc74-sqrwk   1/1     Running   0               7m20s
+nginx-deployment-75fdcbbc74-zb47w   1/1     Running   0               7m20s
+test                                1/1     Running   2 (3h59m ago)   5h59m
+test2                               1/1     Running   1 (3h59m ago)   8h
