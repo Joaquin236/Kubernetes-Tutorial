@@ -673,3 +673,5 @@ deployment.apps/nginx-deployment
 REVISION  CHANGE-CAUSE
 1         <none>
 2         <none>
+## Para confirmar la versión anterior usaremos:
+kubectl rollout undo deployment nginx-deployment --to-revision=3
