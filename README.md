@@ -675,3 +675,13 @@ REVISION  CHANGE-CAUSE
 2         <none>
 ## Para confirmar la versión anterior usaremos:
 kubectl rollout undo deployment nginx-deployment --to-revision=3
+
+## 13.7 Para borrar necesitamos:
+kubectl delete node minikube
+node "minikube" deleted
+
+kubectl delete deployment.apps nginx-cli
+deployment.apps "nginx-cli" deleted from default namespace
+
+kubectl delete deployment.apps nginx-deployment
+deployment.apps "nginx-deployment" deleted from default namespace
