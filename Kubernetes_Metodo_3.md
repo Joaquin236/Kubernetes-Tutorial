@@ -4,7 +4,7 @@
 # Documentación 2: https://kubernetes.io/docs/concepts/services-networking/ingress/
 # Documentación 3: https://kind.sigs.k8s.io
 # Curso de pago Udemi --> https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/?couponCode=MT260629G3
-# Curso gratis con simulador de Kubernetes --> 
+# Curso gratis con simulador de Kubernetes --> https://learn.kodekloud.com/user/dashboard
 # Curso gratis Google Skills --> https://www.skills.google/course_templates/2?locale=es
 # Conclusión: Este método es el que más éxito tiene por ahora
 # 1º Descargamos el minikube
