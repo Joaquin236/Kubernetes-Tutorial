@@ -173,6 +173,10 @@ minikube node add --worker
 # 7.1º Añadir los pods de forma automática:
 kubectl run test --image=nginx
 
+## También se puede añadir a otro namespace si fuese necesario
+kubectl run redis --namespace finance --image redis 
+pod/redis created
+
 # 7.2º Crear un pod a través de un fichero pod.yaml, para aplicarlo se enlaza el comando kubectl con el fichero:
 nano pod.yaml
 
