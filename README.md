@@ -685,3 +685,6 @@ deployment.apps "nginx-cli" deleted from default namespace
 
 kubectl delete deployment.apps nginx-deployment
 deployment.apps "nginx-deployment" deleted from default namespace
+
+kubectl delete pod webapp
+webapp pod deleted
