@@ -538,3 +538,29 @@ kubectl create deployment --image=nginx nginx --dry-run=client --replicas=4 -o y
 ## Dentro del nodo se encuentra un servicio que conecta el host con los contenedores activos
 ## Tipos de servicios: ["Node_Port" , "Cluster_IP" , "Load_Balancer"]
 ## Node_Port --> Cada contenedor lleva el puerto con su dirección con otra CIDR, el servicio hace de enlace entre el host y el nodo, este servicio tiene su dirección diferente a la del contenedor
+## Fichero yaml del servicio
+apiVersion: v1
+kind: Service
+metadata:
+    name: myapp-service
+spec:
+    type: NodePort
+    ports:
+     - targetPort: 80
+       port:80
+       nodePort: 30008
+    selector:
+       app: myapp
+       type: front-end 
+## Fichero yaml del pod asociado al servicio
+apiVersion: v1
+kind: Pod
+metadata:
+ name: myapp-pod
+ labels:
+    app: myapp
+    type: front-end
+## Comando para crear el servicio
+kubectl creade -f <file_name.yaml>
+## Comando para consultar los servicios
+kubectl get services
