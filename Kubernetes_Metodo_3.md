@@ -532,3 +532,9 @@ kubectl apply -f <name_file.yaml>
 kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
 ## En las versiones más modernas de Kubernetes admite personalizar el número de replicas a trabajar:
 kubectl create deployment --image=nginx nginx --dry-run=client --replicas=4 -o yaml > nginx-deployment.yaml
+
+## 18º Los servicios ofrecen interacción con los pods a través del comando curl <http://IP:puerto>
+## Las direcciones IP de los pods no son enrutables con la dirección del host. Impidiendo acceder desde la navegación tradicional
+## Dentro del nodo se encuentra un servicio que conecta el host con los contenedores activos
+## Tipos de servicios: ["Node_Port" , "Cluster_IP" , "Load_Balancer"]
+## Node_Port --> Cada contenedor lleva el puerto con su dirección con otra CIDR, el servicio hace de enlace entre el host y el nodo, este servicio tiene su dirección diferente a la del contenedor
