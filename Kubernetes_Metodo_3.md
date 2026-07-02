@@ -600,4 +600,17 @@ spec:
   - name: nginx-container
     image: nginx
 
-## 20º 
+## 20º El servicio Balanced depende de un sistema Cloud compatible con él y una aplicación de MV, si se usa en un entorno no compatible es como un NodePort
+## Fichero yaml del LoadBalancer
+apiVersion: v1
+kind: Service
+metadata:
+    name: myapp-service
+spec:
+    type: LoadBalancer
+    ports:
+     - targetPort: 80
+       port: 80
+       nodePort: 30008
+
+##        
