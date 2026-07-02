@@ -506,3 +506,7 @@ spec:
 kubectl create -f replicaset.yaml
 
 ## 14.2º Consultar el set de réplicas activas
+kubectl get replicaset
+
+## 14.3º Borrar el set de réplicas activas, borrará todo el contenido del set
+kubectl delete replicaset myapp-replicaset
