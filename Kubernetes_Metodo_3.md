@@ -538,7 +538,7 @@ kubectl create deployment --image=nginx nginx --dry-run=client --replicas=4 -o y
 ## Dentro del nodo se encuentra un servicio que conecta el host con los contenedores activos
 ## Tipos de servicios: ["Node_Port" , "Cluster_IP" , "Load_Balancer"]
 ## Node_Port --> Cada contenedor lleva el puerto con su dirección con otra CIDR, el servicio hace de enlace entre el host y el nodo, este servicio tiene su dirección diferente a la del contenedor
-## Fichero yaml del servicio
+## Fichero yaml del servicio NodePort
 apiVersion: v1
 kind: Service
 metadata:
@@ -570,3 +570,30 @@ kubectl get services
 
 ## 19º En el diseño del Cluster_IP los servidores de los contenedores se agrupan por sus funciones:
 ## Front-end --> Back-end --> Redis. Cada uno tiene la IP interna del nodo
+## Fichero del Servicio ClusterIP
+apiVersion: v1
+kind: Service
+metadata:
+     name: back-end
+spec:
+    type: ClusterIP
+    ports:
+     - targetPort: 80
+       port: 80
+    selector:
+       app: myapp
+       type: back-end
+
+## Fichero del Pod asociado al servicio
+apiVersion: v1
+kind: Pod
+metadata:
+ name: myapp-pod
+ labels:
+    app: myapp
+    type: back-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+
