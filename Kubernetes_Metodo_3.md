@@ -552,7 +552,7 @@ spec:
     selector:
        app: myapp
        type: front-end 
-## Fichero yaml del pod asociado al servicio
+## Fichero yaml del pod asociado al servicio, los parámetros del labels se asocian con el yaml del servicio
 apiVersion: v1
 kind: Pod
 metadata:
@@ -565,3 +565,4 @@ kubectl creade -f <file_name.yaml>
 ## Comando para consultar los servicios
 kubectl get services
 ## Después de configurarlo, el navegador GUI del cliente puede visitar el contenido del contenedor que queremos visitar
+## Cuando hay más de un contenedor, el nodo reparte el servicio entre los contenedores. Cuando hay más de un cluster, el servicio se expande a los demás clusters
