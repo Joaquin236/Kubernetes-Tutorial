@@ -568,3 +568,5 @@ kubectl get services
 ## Cuando hay más de un contenedor, el nodo reparte el servicio entre los contenedores. Cuando hay más de un cluster, el servicio se expande a los demás clusters
 ## En el segundo ejemplo de los node_ports, se ofrecen más de dos direcciones para enlazarse con los servidores. Si se produce un cambio, el servidor de nodos cambia la estructura sin necesidad de actuar
 
+## 19º En el diseño del Cluster_IP los servidores de los contenedores se agrupan por sus funciones:
+## Front-end --> Back-end --> Redis. Cada uno tiene la IP interna del nodo
