@@ -689,7 +689,7 @@ deployment.apps "nginx-deployment" deleted from default namespace
 kubectl delete pod webapp
 webapp pod deleted
 
-## 14º Si necesitamos crear un set de réplicas, usaremos esta estructura en fichero.yaml
+## 14.1º Si necesitamos crear un set de réplicas, usaremos esta estructura en fichero.yaml
 nano replicaset.yaml
 
 apiVersion: apps/v1
@@ -715,4 +715,10 @@ spec:
     matchLabels:
        type: front-end
 
-kubectl create replicaset -f replicaset.yaml       
+kubectl create -f replicaset.yaml
+
+## 14.2º Consultar el set de réplicas activas
+kubectl get replicaset
+
+## 14.3º Borrar el set de réplicas, todo su contenido será borrado
+kubectl delete replicaset myapp-replicaset
