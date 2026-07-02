@@ -566,3 +566,5 @@ kubectl creade -f <file_name.yaml>
 kubectl get services
 ## Después de configurarlo, el navegador GUI del cliente puede visitar el contenido del contenedor que queremos visitar
 ## Cuando hay más de un contenedor, el nodo reparte el servicio entre los contenedores. Cuando hay más de un cluster, el servicio se expande a los demás clusters
+## En el segundo ejemplo de los node_ports, se ofrecen más de dos direcciones para enlazarse con los servidores. Si se produce un cambio, el servidor de nodos cambia la estructura sin necesidad de actuar
+
