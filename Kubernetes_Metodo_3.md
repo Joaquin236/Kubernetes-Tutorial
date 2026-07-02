@@ -515,4 +515,4 @@ kubectl delete replicaset myapp-replicaset
 kubectl replace -f replicaset.yaml
 
 ## 14.5º Para escalar y mejorar el rendimiento del set aplicacos este comando:
-kubectl scale -replicas=6 -f replicaset.yaml
+kubectl scale --replicas=5 -f new-replica-set.yaml 
