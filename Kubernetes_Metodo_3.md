@@ -530,3 +530,5 @@ kubectl apply -f <name_file.yaml>
 
 ## 17º Este comando redirige la salida de la interfaz de consola a un fichero nuevo. Si existe sobreescribe su contenido
 kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
+## En las versiones más modernas de Kubernetes admite personalizar el número de replicas a trabajar:
+kubectl create deployment --image=nginx nginx --dry-run=client --replicas=4 -o yaml > nginx-deployment.yaml
