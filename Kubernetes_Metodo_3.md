@@ -564,3 +564,4 @@ metadata:
 kubectl creade -f <file_name.yaml>
 ## Comando para consultar los servicios
 kubectl get services
+## Después de configurarlo, el navegador GUI del cliente puede visitar el contenido del contenedor que queremos visitar
