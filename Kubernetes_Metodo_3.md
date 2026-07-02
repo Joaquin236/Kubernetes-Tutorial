@@ -383,7 +383,7 @@ nginx-deployment   3/3     3            3           10m
 ## Estos comandos muestran que el deployment está operativo tras crearlo
 
 ## 13.2º Con el comando kubectl create se puede crear el deploy con un diseño manual
-kubectl create deployment nginx-cli --image=nginx:apline
+kubectl create deployment nginx-cli --image=nginx:alpine
 
 kubectl get deployments.apps
 NAME               READY   UP-TO-DATE   AVAILABLE   AGE
