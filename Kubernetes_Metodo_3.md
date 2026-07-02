@@ -268,6 +268,12 @@ kube-proxy-7rxmx                   1/1     Running   1 (12h ago)     13h
 kube-scheduler-minikube            1/1     Running   1 (12h ago)     13h
 storage-provisioner                1/1     Running   3 (3h10m ago)   13h
 
+## Obtener los pods de otros namespaces
+kubectl get pods --namespace research
+NAME    READY   STATUS             RESTARTS       AGE
+dna-1   0/1     CrashLoopBackOff   6 (107s ago)   7m35s
+dna-2   0/1     CrashLoopBackOff   6 (114s ago)   7m35s
+
 # 12.3 Creamos un nuevo namespace donde podamos editar
 kubectl create ns development
 namespace/development created
