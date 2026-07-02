@@ -510,3 +510,9 @@ kubectl get replicaset
 
 ## 14.3º Borrar el set de réplicas activas, borrará todo el contenido del set
 kubectl delete replicaset myapp-replicaset
+
+## 14.4º Para reemplazar el set usaremos:
+kubectl replace -f replicaset.yaml
+
+## 14.5º Para escalar y mejorar el rendimiento del set aplicacos este comando:
+kubectl scale -replicas=6 -f replicaset.yaml
