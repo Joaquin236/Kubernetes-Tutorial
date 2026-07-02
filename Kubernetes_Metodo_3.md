@@ -516,3 +516,17 @@ kubectl replace -f replicaset.yaml
 
 ## 14.5º Para escalar y mejorar el rendimiento del set aplicacos este comando:
 kubectl scale --replicas=5 -f new-replica-set.yaml 
+
+## 15º La consola puede construir el fichero yaml completo de los PODs con el comando:
+kubectl run nginx --image=nginx --dry-run=client -o yaml
+## Genera un manifiesto del Pod con un fichero yaml (-o yaml). No crearlo de inmediato (--dry-run)
+## Para crear el POD creado debe usar el comando:
+kubectl create -f <name_file.yaml>
+
+## 16º El despliegue de los deployment también disponen del mismo comando:
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
+## El manifiesto del Deployment también debe realizarse manualmente
+kubectl apply -f <name_file.yaml>
+
+## 17º Este comando redirige la salida de la interfaz de consola a un fichero nuevo. Si existe sobreescribe su contenido
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
