@@ -3,6 +3,9 @@
 # Documentación 1: https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download
 # Documentación 2: https://kubernetes.io/docs/concepts/services-networking/ingress/
 # Documentación 3: https://kind.sigs.k8s.io
+# Curso de pago Udemi --> https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/?couponCode=MT260629G3
+# Curso gratis con simulador de Kubernetes --> 
+# Curso gratis Google Skills --> https://www.skills.google/course_templates/2?locale=es
 # Conclusión: Este método es el que más éxito tiene por ahora
 # 1º Descargamos el minikube
 curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
@@ -597,3 +600,4 @@ spec:
   - name: nginx-container
     image: nginx
 
+## 20º 
