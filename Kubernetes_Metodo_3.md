@@ -684,4 +684,5 @@ curl http://10.22.0.13:8080
 </body>
 </html>
 
-##
+## 22º Cuando necesitemos ubicar los Pods en otro namespace escribimos --namespace=<name>:
+kubectl create -f <file_name.yaml> --namespace=<name>
