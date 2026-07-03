@@ -686,3 +686,19 @@ curl http://10.22.0.13:8080
 
 ## 22º Cuando necesitemos ubicar los Pods en otro namespace escribimos --namespace=<name>:
 kubectl create -f <file_name.yaml> --namespace=<name>
+## También se pude establecer el namespace desde el fichero.yaml
+nano name_file.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: myapp-pod
+ namespace: dev
+ labels:
+    app: myapp
+    type: front-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+
+## 
