@@ -21,7 +21,6 @@ kubectl get po -A
 minikube dashboard
 
 # 4.1º Crea una muestra de desarrollo y exponer en el puerto 8080:
-
 kubectl create deployment hello-minikube --image=kicbase/echo-server:1.0
 kubectl expose deployment hello-minikube --type=NodePort --port=8080
 # Esto tomará un tiempo, pero el desarrollo mostrará cuando puedas iniciarlo:
@@ -51,7 +50,6 @@ kubectl get services balanced
 # Your deployment is now available at <EXTERNAL-IP>:8080
 
 # 4.3º Inicia el complemento INGRESS:
-
 minikube addons enable ingress
 /*
 The following example creates simple echo-server services and an Ingress object to route to these services.
@@ -177,6 +175,9 @@ kubectl run test --image=nginx
 
 ## También se puede añadir a otro namespace si fuese necesario
 kubectl run redis --namespace finance --image redis 
+pod/redis created
+## Este comando ofrece un label personalizado
+kubectl run redis redis --image=redis:alpine --labels=tier=db
 pod/redis created
 
 # 7.2º Crear un pod a través de un fichero pod.yaml, para aplicarlo se enlaza el comando kubectl con el fichero:
