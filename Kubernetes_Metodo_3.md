@@ -622,6 +622,40 @@ spec:
      - targetPort: 80
        port: 80
        nodePort: 30008
+-----------------------------------------------------------------------
+## Fichero NodePort_2
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+  namespace: default
+spec:
+  ports:
+  - nodePort: 30080
+    port: 8080
+    targetPort: 8080
+  selector:
+    name: simple-webapp
+  type: NodePort
+------------------------------------------------------------------------
+kubectl create -f service-definition-1.yaml 
+service/webapp-service created
+
+kubectl get service
+NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+kubernetes       ClusterIP   10.43.0.1       <none>        443/TCP          30m
+webapp-service   NodePort    10.43.138.146   <none>        8080:30080/TCP   2m28s
+
+curl http://10.43.138.146:8080
+<!doctype html>
+<title>Hello from Flask</title>
+<body style="background: #e74c3c;"></body>
+<div style="color: #e4e4e4;
+    text-align:  center;
+    height: 90px;
+    vertical-align:  middle;">
+  <h1>Hello from simple-webapp-deployment-6dcd5bb6b6-lgd7t!</h1>
+</div>
 
 ## 21º Cuando se usa el comando curl obtenemos:
 curl http://10.22.0.13:8080
