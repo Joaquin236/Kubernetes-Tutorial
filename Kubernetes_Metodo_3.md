@@ -684,7 +684,7 @@ curl http://10.22.0.13:8080
 </body>
 </html>
 
-## 22º Cuando necesitemos ubicar los Pods en otro namespace escribimos --namespace=<name>:
+## 22.1º Cuando necesitemos ubicar los Pods en otro namespace escribimos --namespace=<name>:
 kubectl create -f <file_name.yaml> --namespace=<name>
 ## También se pude establecer el namespace desde el fichero.yaml
 nano name_file.yaml
@@ -700,5 +700,18 @@ spec:
   containers:
   - name: nginx-container
     image: nginx
+kubectl create -f <file_name.yaml>
 
-## 
+## 22.2º Los namespaces admiten ser creados desde un fichero.yaml
+nano name_file.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+ name: dev
+kubectl create -f name_file.yaml
+
+## 22.3º Cuando necesitamos entrar en el namespace default, no declaramos el namespace:
+kubectl get pods
+## Cuando necesitamos entrar en cualquier otro namecespace necesitamos declararlo:
+kubectl get pods --namespace=<another_namespaces>
+
