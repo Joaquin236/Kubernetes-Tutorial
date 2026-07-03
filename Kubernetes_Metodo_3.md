@@ -780,3 +780,7 @@ kubectl create -f <quote_file.yaml>
 ## 22.6º Los clientes usarán la función de conexión mysql.connect() de sus aplicaciones de consultas para acceder al contenedor con bases de datos:
 mysql.connect("db-service.dev.svc.cluster.local")
 ("Service_Name".Namespace.Service.Cluster_Domain)
+
+## 23º Los modos de trabajo en kubernetes pueden ser:
+### Impertativos: Se usa los comandos en primer plano 
+### Declarativos: Se usa los ficheros y rutas absolutas que indican la ubicación lógica de los ficheros para trabajar
