@@ -792,3 +792,11 @@ mysql.connect("db-service.dev.svc.cluster.local")
 ## 23º Los modos de trabajo en kubernetes pueden ser:
 ### Impertativos: Se usa los comandos en primer plano, es más rápido pero más exigente con las órdenes
 ### Declarativos: Se usa los ficheros y rutas absolutas que indican la ubicación lógica de los ficheros para trabajar
+
+## 24.1º Si necesitamos consultar los recursos disponibles de la api de kubernetes, usaremos:
+kubectl api-resources
+## 24.2º Para profundizar en la consulta de recursos, usaremos:
+kubectl explain <resource> # --> modo normal
+kubectl explain <resource>.spec # --> modo intermedio
+kubectl explain <resource> --recursive # --> modo avazado
+kubectl explain <resource>.spec --recursive # --> modo completo
