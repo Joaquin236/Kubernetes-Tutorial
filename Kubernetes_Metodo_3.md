@@ -715,3 +715,34 @@ kubectl get pods
 ## Cuando necesitamos entrar en cualquier otro namecespace necesitamos declararlo:
 kubectl get pods --namespace=<another_namespaces>
 
+## 22.4º Si necesitamos cambiar el namespace predeterminado por otro usaremos:
+kubectl config set-context $(kubectl config current-context) --namespace=dev
+
+## Al cambiar el valor el comando 'kubectl get pods' ya no ofrecerá el default, ofrecerá el 'dev' como predeterminado, para ver el default necesitamos el --namespace=default:
+kubectl get pods
+kubectl get pods --namespace=default
+kubectl get pods --namespace=pr
+
+## Si queremos mostrar todos los pods en los namespaces completos usamos:
+kubectl get pods --all-namespaces
+
+## 22.5º Para evitar la saturación del servidor host de las unidades virtuales, se puede establecer cuotas de limitación a través de un fichero yaml:
+nano <quote_file.yaml>
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+ name: compute-quota
+ namespace: dev
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "2"
+    limits.memory 4Gi
+
+kubectl create -f <quote_file.yaml>
+
+## 22.6º Los clientes usarán la función de conexión mysql.connect() de sus aplicaciones de consultas para acceder al contenedor con bases de datos:
+mysql.connect("db-service.dev.svc.cluster.local")
+("Service_Name".Namespace.Service.Cluster_Domain)
