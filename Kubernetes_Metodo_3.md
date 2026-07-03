@@ -3,6 +3,8 @@
 # Documentación 1: https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download
 # Documentación 2: https://kubernetes.io/docs/concepts/services-networking/ingress/
 # Documentación 3: https://kind.sigs.k8s.io
+# Documentación 4: https://kubernetes.io/docs/reference/kubectl/conventions/
+# Documentación 5: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
 # Curso de pago Udemi --> https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/?couponCode=MT260629G3
 # Curso gratis con simulador de Kubernetes --> https://learn.kodekloud.com/user/dashboard
 # Curso gratis Google Skills --> https://www.skills.google/course_templates/2?locale=es
@@ -656,6 +658,12 @@ curl http://10.43.138.146:8080
     vertical-align:  middle;">
   <h1>Hello from simple-webapp-deployment-6dcd5bb6b6-lgd7t!</h1>
 </div>
+---------------------------------------------------------------------------------
+## Comando imperativo para crear un servicio:
+kubectl expose pod redis --port=6379 --name redis-service --dry-run=client -o yaml # --> crea los pods sin intervención
+kubectl create service clusterip redis --tcp=6379:6379 --dry-run=client -o yaml # --> los pods hay que seleccionarlos manualmente
+kubectl expose pod nginx --type=NodePort --port=80 --name=nginx-service --dry-run=client -o yaml # --> crea los valores de los pods pero no puedes elegir el puerto a mano
+kubectl create service nodeport nginx --tcp=80:80 --node-port=30080 --dry-run=client -o yaml # --> no puedes usar los selectores ni los letreros
 
 ## 21º Cuando se usa el comando curl obtenemos:
 curl http://10.22.0.13:8080
@@ -782,5 +790,5 @@ mysql.connect("db-service.dev.svc.cluster.local")
 ("Service_Name".Namespace.Service.Cluster_Domain)
 
 ## 23º Los modos de trabajo en kubernetes pueden ser:
-### Impertativos: Se usa los comandos en primer plano 
+### Impertativos: Se usa los comandos en primer plano, es más rápido pero más exigente con las órdenes
 ### Declarativos: Se usa los ficheros y rutas absolutas que indican la ubicación lógica de los ficheros para trabajar
