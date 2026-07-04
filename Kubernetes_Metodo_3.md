@@ -838,3 +838,16 @@ deployment.apps/webapp created
 ## 25.5 Crear un pod con puerto 8080
 kubectl run custom-nginx --image=nginx --port=8080
 pod/custom-nginx created
+
+## 25.6 Crear un namespace nuevo
+kubectl create namespace dev-ns
+namespace/dev-ns created
+
+## 25.7 Crear un deploy con el enlace a un namespace
+kubectl create deployment redis-deploy --replicas=2 -n dev-ns --image=redis
+deployment.apps/redis-deploy created
+
+## 25.8 Crear un pod y un servicio con los nombres httpd, el comando --expose enlaza el pod con el servicio, si no existe lo crea sin error de comando:
+kubectl run httpd --port=80 --expose --image=httpd:alpine
+service/httpd created
+pod/httpd created
