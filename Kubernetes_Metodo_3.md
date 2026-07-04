@@ -856,3 +856,6 @@ pod/httpd created
 kubectl apply -f nginx.yaml
 kubectl apply -f /path/to/file_nginx.yaml
 kubectl apply -f nginx.yaml # --> si lo repites después de lanzarlo acutaliza el objeto creado
+## Normalmente el fichero manual suele ser más pequeño que el fichero en vivo con el que trabaja kubernetes
+## Existe un proceso intermedio donde el sistema lo interpreta en fichero.json
+## 1º-> Local_file.yaml=yaml --> 2º-> Last Apply_Config.json=json --> 3º-> Kubernetes_Live.yaml=yaml
