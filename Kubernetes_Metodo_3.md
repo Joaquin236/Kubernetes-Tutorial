@@ -802,7 +802,7 @@ kubectl explain <resource>.spec # --> modo intermedio
 kubectl explain <resource> --recursive # --> modo avazado
 kubectl explain <resource>.spec --recursive # --> modo completo
 
-## 25.1 Modo declarativo de creación de POD:
+## 25.1º Modo declarativo de creación de POD:
 kubectl run redis --image=redis:alpine --dry-run=client -o yaml > redis-pod.yaml
 
 cat redis-pod.yaml 
@@ -823,36 +823,36 @@ status: {}
 
 kubectl apply -f redis-pod.yaml
 
-## 25.2 Modo imperativo sin fichero:
+## 25.2º Modo imperativo sin fichero:
 kubectl run redis --image=redis:alpine -l tier=db
 pod/redis created
 
-## 25.3 Crear un servicio para un pod y con puerto 6379:
+## 25.3º Crear un servicio para un pod y con puerto 6379:
 kubectl expose pod redis --port=6379 --name=redis-service --type=ClusterIP
 service/redis-service exposed
 
-## 25.4 Crear un deployment con 3 replicas y con imagen kodekloud
+## 25.4º Crear un deployment con 3 replicas y con imagen kodekloud
 kubectl create deployment webapp --replicas=3 --image=kodekloud/webapp-color
 deployment.apps/webapp created
 
-## 25.5 Crear un pod con puerto 8080
+## 25.5º Crear un pod con puerto 8080
 kubectl run custom-nginx --image=nginx --port=8080
 pod/custom-nginx created
 
-## 25.6 Crear un namespace nuevo
+## 25.6º Crear un namespace nuevo
 kubectl create namespace dev-ns
 namespace/dev-ns created
 
-## 25.7 Crear un deploy con el enlace a un namespace
+## 25.7º Crear un deploy con el enlace a un namespace
 kubectl create deployment redis-deploy --replicas=2 -n dev-ns --image=redis
 deployment.apps/redis-deploy created
 
-## 25.8 Crear un pod y un servicio con los nombres httpd, el comando --expose enlaza el pod con el servicio, si no existe lo crea sin error de comando:
+## 25.8º Crear un pod y un servicio con los nombres httpd, el comando --expose enlaza el pod con el servicio, si no existe lo crea sin error de comando:
 kubectl run httpd --port=80 --expose --image=httpd:alpine
 service/httpd created
 pod/httpd created
 
-## 26 Diferentes formas de aplicar un fichero.yaml:
+## 26º Diferentes formas de aplicar un fichero.yaml:
 kubectl apply -f nginx.yaml
 kubectl apply -f /path/to/file_nginx.yaml
 kubectl apply -f nginx.yaml # --> si lo repites después de lanzarlo acutaliza el objeto creado
@@ -860,4 +860,66 @@ kubectl apply -f nginx.yaml # --> si lo repites después de lanzarlo acutaliza e
 ## Existe un proceso intermedio donde el sistema lo interpreta en fichero.json
 ## 1º-> Local_file.yaml=yaml --> 2º-> Last Apply_Config.json=json --> 3º-> Kubernetes_Live.yaml=yaml
 
-## 27 Programar el planificador back-end: en caso que no queremos el pod en el nodo genérico por falta de seguridad, en el fichero.yaml declaramos la clave 'nodeName' con el valor 'node02', una vez creado el sistema elige el nodo correspondiente
+## 27.1º Programar el planificador back-end: en caso que no queremos el pod en el nodo genérico por falta de seguridad, en el fichero.yaml declaramos la clave 'nodeName' con el valor 'node02', una vez creado el sistema elige el nodo correspondiente, los pods que no cumplen con el valor del nodo no se aplicará, después identifica el nodo y lo asigna. Cuando no hay planificador (Scheduler) en la casilla de estado se informa que está el pod en modo 'Pendiente' y no se podrá usar el pod. Otro caso que puede suceder es el pod ya está creado y funcionando pero se le quiere cambiar el nodo, el sistema no admite cambiar la propiedad del nodo de un pod, la solución es crear un objeto vinculante y enviar la solicitud, es necesario usar la sintaxis de los objetos JSON para esta acción.
+
+## 27.2º Sintaxis del fichero yaml con el nameNode declarado:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: nginx
+ labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 8080
+  nodeName: node
+
+## 27.3º Cambiamos el nodo sin número por node02
+apiVersion: v1
+kind: Pod
+metadata:
+ name: nginx
+ labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 8080
+  nodeName: node02
+
+## 27.4º Con el comando curl creamos un objeto y lleva los valores con JSON:
+nano pod-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: nginx
+ labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 8080
+  nodemane:  
+
+nano pod-bind-definition.yaml
+apiVersion: v1
+kind: Binding
+metadata:
+  name: nginx
+target:
+  apiVersion: v1
+  kind: Node
+  name: node2
+(Estos valores se guardan en el comando con JSON)
+
+## 27.5º Comando curl completo, este comando debe ser modificado para adaptarlo a la situación
+curl --header "Content-Type:application/json" --request POST --data '{"apiVersion":"v1", "kind":"Binding","metadata":{"name":"nginx"},"target":{"apiVersion":"v1","kind":"Node","name":"node2"}}' http://$SERVER/api/v1/namespaces/default/pods/$PODNAME/binding
+
+## 28º 
