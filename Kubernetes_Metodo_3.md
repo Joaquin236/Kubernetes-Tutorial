@@ -801,3 +801,40 @@ kubectl explain <resource> # --> modo normal
 kubectl explain <resource>.spec # --> modo intermedio
 kubectl explain <resource> --recursive # --> modo avazado
 kubectl explain <resource>.spec --recursive # --> modo completo
+
+## 25.1 Modo declarativo de creación de POD:
+kubectl run redis --image=redis:alpine --dry-run=client -o yaml > redis-pod.yaml
+
+cat redis-pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: redis
+  name: redis
+spec:
+  containers:
+  - image: redis:alpine
+    name: redis
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+kubectl apply -f redis-pod.yaml
+
+## 25.2 Modo imperativo sin fichero:
+kubectl run redis --image=redis:alpine -l tier=db
+pod/redis created
+
+## 25.3 Crear un servicio para un pod y con puerto 6379:
+kubectl expose pod redis --port=6379 --name=redis-service --type=ClusterIP
+service/redis-service exposed
+
+## 25.4 Crear un deployment con 3 replicas y con imagen kodekloud
+kubectl create deployment webapp --replicas=3 --image=kodekloud/webapp-color
+deployment.apps/webapp created
+
+## 25.5 Crear un pod con puerto 8080
+kubectl run custom-nginx --image=nginx --port=8080
+pod/custom-nginx created
