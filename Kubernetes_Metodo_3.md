@@ -851,3 +851,5 @@ deployment.apps/redis-deploy created
 kubectl run httpd --port=80 --expose --image=httpd:alpine
 service/httpd created
 pod/httpd created
+
+## 26 
