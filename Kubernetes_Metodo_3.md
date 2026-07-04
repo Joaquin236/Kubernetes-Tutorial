@@ -859,3 +859,5 @@ kubectl apply -f nginx.yaml # --> si lo repites después de lanzarlo acutaliza e
 ## Normalmente el fichero manual suele ser más pequeño que el fichero en vivo con el que trabaja kubernetes
 ## Existe un proceso intermedio donde el sistema lo interpreta en fichero.json
 ## 1º-> Local_file.yaml=yaml --> 2º-> Last Apply_Config.json=json --> 3º-> Kubernetes_Live.yaml=yaml
+
+## 27 Programar el planificador back-end: en caso que no queremos el pod en el nodo genérico por falta de seguridad, en el fichero.yaml declaramos la clave 'nodeName' con el valor 'node02', una vez creado el sistema elige el nodo correspondiente
