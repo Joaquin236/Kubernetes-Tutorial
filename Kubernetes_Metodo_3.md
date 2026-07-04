@@ -852,4 +852,7 @@ kubectl run httpd --port=80 --expose --image=httpd:alpine
 service/httpd created
 pod/httpd created
 
-## 26 
+## 26 Diferentes formas de aplicar un fichero.yaml:
+kubectl apply -f nginx.yaml
+kubectl apply -f /path/to/file_nginx.yaml
+kubectl apply -f nginx.yaml # --> si lo repites después de lanzarlo acutaliza el objeto creado
