@@ -906,7 +906,7 @@ spec:
     image: nginx
     ports:
     - containerPort: 8080
-  nodemane:  
+  nodeName:  
 
 nano pod-bind-definition.yaml
 apiVersion: v1
@@ -920,6 +920,18 @@ target:
 (Estos valores se guardan en el comando con JSON)
 
 ## 27.5º Comando curl completo, este comando debe ser modificado para adaptarlo a la situación
-curl --header "Content-Type:application/json" --request POST --data '{"apiVersion":"v1", "kind":"Binding","metadata":{"name":"nginx"},"target":{"apiVersion":"v1","kind":"Node","name":"node2"}}' http://$SERVER/api/v1/namespaces/default/pods/$PODNAME/binding
+curl --header "Content-Type:application/json" --request POST --data '{"apiVersion":"v1", "kind":"Binding","metadata":{"name":"nginx"},"target":{"apiVersion":"v1","kind":"Node","name":"node2"}}' http://$SERVER/api/v1/namespaces/default/pods/$PODNAME/binding # --> Este comando no parece funcionar por ahora
+
+## 27.6º Esta plantilla lleva el atributo para elegir manualmente el nombre del nodo:
+nano nginx.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  nodeName: <Name _ of _ node>
+  containers:
+  -  image: nginx
+     name: nginx
 
 ## 28º 
