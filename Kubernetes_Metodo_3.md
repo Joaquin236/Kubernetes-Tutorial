@@ -934,7 +934,7 @@ spec:
   -  image: nginx
      name: nginx
 
-## 28º Plantilla con los identicadores de Aplicacción y Función
+## 28.1º Plantilla con los identicadores de Aplicacción y Función
 nano pod-definition.yaml
 apiVersion: v1
 kind: Pod
@@ -950,3 +950,5 @@ spec:
     ports:
       - containerPort: 8080
 
+## 28.2º Filtramos los pods por aplicación a través del comando:
+kubectl get pods --selector app=App1
