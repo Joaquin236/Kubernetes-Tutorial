@@ -934,4 +934,19 @@ spec:
   -  image: nginx
      name: nginx
 
-## 28º 
+## 28º Plantilla con los identicadores de Aplicacción y Función
+nano pod-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: simple-webapp
+ labels:
+   app: App1
+   Function: Fron-end
+spec:
+  containers:
+  - name: simple-webapp
+    image: simple-webapp
+    ports:
+      - containerPort: 8080
+
