@@ -502,7 +502,7 @@ metadata:
  name: myapp-replicaset
  labels:
     app: myapp
-    type: front-end
+    type: Front-end
 spec:
  template:
     metadata:
@@ -952,3 +952,54 @@ spec:
 
 ## 28.2º Filtramos los pods por aplicación a través del comando:
 kubectl get pods --selector app=App1
+
+## 28.3º Plantilla de replicaset con la aplicación y función
+nano replicaset.yaml
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+ name: simple-webapp
+ labels:
+    app: App1
+    type: Front-end
+spec:
+ template:
+    metadata:
+    replicas: 3
+    selector:
+      matchLabels:
+       app: App1
+     template:
+       metadata:
+         labels:
+           app: App1
+           function: Front-end
+       spec:
+         containers:
+         - name: simple-webapp
+           image: simple-webapp
+
+## Los valores de Labels ubicados en la parte superior del fichero yaml pertenecen a la replica, los de la parte inferior pertenece al pod
+
+## Después se puede enlazar el fichero de replicas con uno de servicios
+nano service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+    name: my-service
+spec:
+  selector:
+    app: App1
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+
+## 28.4º Las anotaciones son comentarios que permiten guardar el atributo buildversion, se coloca con annotations
+nano fichero.yaml
+(before the spec attribute)
+annotations:
+    buildversion: 1.35
+
+## 29º
