@@ -1002,4 +1002,14 @@ nano fichero.yaml
 annotations:
     buildversion: 1.35
 
+## 28.5º Con este comando se puede filtrar los pods según la aplicación en curso
+kubectl get pods --selector=bu
+NAME          READY   STATUS    RESTARTS   AGE
+app-1-8p8f9   1/1     Running   0          2m
+app-1-blrn8   1/1     Running   0          2m
+app-1-ncpdj   1/1     Running   0          2m
+app-1-zzxdf   1/1     Running   0          2m
+auth          1/1     Running   0          2m
+db-2-ln6cd    1/1     Running   0          2m
+
 ## 29º
