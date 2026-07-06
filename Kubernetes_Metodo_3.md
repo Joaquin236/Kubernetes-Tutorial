@@ -1138,4 +1138,185 @@ spec:
 ## Si está activo el pod puede modificar la afinidad del nodo, puede suceder con el cambio de nombre del nodo.
 ## El cambio de nombre o el borrado de la etiqueta del tamaño del nodo puede solucionarse con el parámetro Ignored
 
-##
+## Localizar los label de un nodo:
+kubectl describe nodes node01
+
+## Cambiar el label de un nodo:
+kubectl label nodes node01 color=blue
+node/node01 labeled
+
+## Fichero yaml con despliegue
+nano deployment_blue.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+
+## aplicar fichero yaml
+kubectl apply -f deployment_blue.yaml 
+deployment.apps/blue created
+
+## Verificación del despliegue de Blue
+kubectl get deployments.apps -o wide 
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES   SELECTOR
+blue   3/3     3            3           81s   nginx        nginx    app=nginx
+
+## Estado de nodos
+kubectl get nodes -o wide 
+NAME           STATUS   ROLES           AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+controlplane   Ready    control-plane   17m   v1.35.0   10.244.56.22    <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+node01         Ready    <none>          17m   v1.35.0   10.244.34.242   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+
+## Estado de pods
+kubectl get pods -o wide 
+NAME                    READY   STATUS    RESTARTS   AGE    IP           NODE           NOMINATED NODE   READINESS GATES
+blue-56c45fd5ff-26hfq   1/1     Running   0          2m3s   172.17.1.2   node01         <none>           <none>
+blue-56c45fd5ff-8b67j   1/1     Running   0          2m3s   172.17.1.3   node01         <none>           <none>
+blue-56c45fd5ff-8zhnl   1/1     Running   0          2m3s   172.17.0.4   controlplane   <none>           <none>
+
+## Creación del fichero yaml del despliegue de Red
+nano deployment_red.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: red
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      run: nginx
+  template:
+    metadata:
+      labels:
+        run: nginx
+    spec:
+      containers:
+      - image: nginx
+        imagePullPolicy: Always
+        name: nginx
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+
+## 32º Cuando establecemos la clasificación desde el tain o la afinidad también es posible que un pod que no debe colocarse en el nodo no correspondiente, un pod con la tolerancia a un tain puede entrar en un nodo que no lleva tain. Con el uso de afinidad establecemos una etiqueta a los nodos, después establecenos los selectores a los pods que necesitamos ubicar en los nodos con los identificadores, incluso esta situación no impide que otros pods se coloquen en el nodo no compatible con la operación de despliegue. Una solución es combinar las dos opciones: 1º Se establece los tain & tolerations para clasificar. 2º Aplicamos etiquetas para clasificar y filtrar con el node affinity
+
+## 33º Cada nodo tiene un límite de recursos *'CPU & RAM', el planificador kube-Scheduler va verificando donde se puede añadir hasta completar la carga de sistema, si un nodo está lleno y no admite más pods, se lleva a otro disponible. Cuando todos están llenos el siguiente pod estará en estado pendiente de colocar en el nodo. Normalmente los pods llevan 1 Nucleo de CPU y 1 GB de RAM, estos valores son configurables a través de los ficheros yaml.
+
+nano pod-definition_1.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: myapp-pod
+spec:
+  containers:
+  - name: data-processor
+    image: data-processor
+  resources:
+    requests:
+      memory: "4Gi" / "4G"
+      cpu: 2
+
+## A parte del Procesador y Memoria Max, se puede elegir el límite de seguirad de los recursos.
+
+nano pod-definition_1.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: myapp-pod
+spec:
+  containers:
+  - name: data-processor
+    image: data-processor
+  resources:
+    requests:
+      memory: "1Gi" / "1G" # --> recursos estándares del pod
+      cpu: 2
+    limits:
+      memory: "2Gi" / "2G" # --> límite máximo del pod
+      cpu: 2
+
+## El sistema se asegura que no se vaya a superar el límite para proteger el hardawre, kernel y peticiones. Si los llega a superar, el sistema le retira los recursos y se detiene el pod, después se genera un registro con el mensaje de error por parada inesperada
+
+## En los valores predefinidos, el pod puede usar todo lo que necesite, incluso es capaz de estrangular/asfixiar el Procesador & Memoria si no se controla el acceso a los recursos y afectando a otros pods del nodo
+                                       | BEST_OPTION
+NO REQUESTS  | NO REQUESTS |  REQUESTS |    REQUESTS
+NO LIMITS    |    LIMITS   |  LIMITS   | NO LIMITS
+ ##  | #     |     |       |     |     | #    | #
+ #   | #     |     |       |     |     | #    | #
+ #   | #     |3vCPU| 3Gi   |3vCPU| 3Gi | #    | #
+ #   | #     | # # | # #   | #   | #   | # #  | # #
+ # # | # #   | # # | # #   |1vCPU| 1Gi |1vCPU | 1Gi
+ 1 2 | 1 2   | 1 2 | 1 2   | 1 2 | 1 2 | 1 2  | 1 2 
+ CPU | RAM   | CPU | RAM   | CPU | RAM | CPU  | RAM
+              REQUESTS=LIMITS
+## Los pods cuando compiten entre sí y no se raciona bien el acceso es capaz de detener a otros pods por falta de recursos. Cuando es la memoria el recurso al borde de colapsar, el pod que gaste más debe ser detenido para liberar los recursos de RAM.
+
+## fichero yaml para limitar el rango de cpu:
+nano limit-range-cpu.yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-resource-constraint
+spec:
+  limits:
+  - default:
+      cpu: 500m # --> Limit
+    defaultRequest:
+      cpu: 500m # --> Request
+    max:
+      cpu: "i" # --> Limit
+    min:
+      cpu: 100m # --> Request
+    type: Container
+
+## fichero yaml para limitar el rango de memoria:
+nano limit-range-memory.yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: memory-resource-constraint
+spec:
+  limits:
+  - default:
+      memory: 1Gi # --> Limit
+    defaultRequest:
+      memory: 1Gi # --> Request
+    max:
+      memory: 1Gi # --> Limit
+    min:
+      memory: 600Mi # --> Request
+    type: Container
+  
+## Si fuese necesario racionarlo todo a nivel de nodos o de cluster, se puede establecer unas cuotas a nivel de los namespaces a través de límites duros:
+nano resources-quota.yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: my-resource-quota
+spec:
+  hard:
+    requests.cpu: 4
+    requests.memory: 4Gi
+    limits.cpu: 10
+    limits.memory: 10Gi
+
+## 
