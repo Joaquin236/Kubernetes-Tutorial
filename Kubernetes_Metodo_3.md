@@ -1015,15 +1015,15 @@ db-2-ln6cd    1/1     Running   0          2m
 ## 29º Para filtrar el acceso de los pods al nodo establecemos el filtro taint:
 kubectl tain nodes <node_name> key=value:taint-effect
 ## el taint-effect evaluará si el pod tolera el filtro
-## 1º Filtro --> NoShedule: el pod no recibe el shedule cuando vaya a crearse
-## 2º Filtro --> PreferNoShedule: el pod no tiene garantizado que se le aplique el NoShedule
+## 1º Filtro --> NoSchedule: el pod no recibe el shedule cuando vaya a crearse
+## 2º Filtro --> PreferNoSchedule: el pod no tiene garantizado que se le aplique el NoSchedule
 ## 3º Filtro --> NoExecute: los pods serán desalojados del nodo que cumple con la tolerancia
 
 ## Muestra de un comando válido:
-kubectl taint nodes node1 app=myapp:NoShedule
+kubectl taint nodes node1 app=myapp:NoSchedule
 
 ## Comapración entre el comando y el fichero.yaml:
-kubectl taint nodes node1 app*1=*2blue*3:NoShedule*4
+kubectl taint nodes node1 app*1=*2blue*3:NoSchedule*4
 
 nano pod-tain-definition.yaml
 apiVersion: v1
@@ -1038,7 +1038,104 @@ spec:
   - key: app*1
     operator: "Equal"*2
     value: blue*3
-    effect: NoShedule*4
+    effect: NoSchedule*4
 
 ## Para mostrar si el taint está activo le pasamos el grep Taints
 kubectl describe node <name_of_node> | grep Taint
+
+## Muestra completa de fichero_taint completo:
+cat bee_pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+ name: bee
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  tolerations:
+  - key: spray
+    operator: "Equal"
+    value: mortein
+    effect: NoSchedule
+
+## Obtener los pods al completo:
+kubectl get pods -o wide 
+NAME       READY   STATUS    RESTARTS   AGE     IP           NODE     NOMINATED NODE   READINESS GATES
+bee        1/1     Running   0          2m55s   172.17.1.2   node01   <none>           <none>
+mosquito   0/1     Pending   0          11m     <none>       <none>   <none>           <none>
+
+## borrador de taint:
+kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule-
+node/controlplane untainted
+
+## 30º El tamaño del cluster se puede modificar dentro del fichero de construir_Pods.yaml
+
+## Comando para asignar a los nodos el tamaño solicitado por el pod
+kubectl label nodes <node_name> <label-key>=<label_value>
+kubectl label nodes node-1 size=Large
+
+## nano fichero_pod_size.yaml
+apiVersion: v1
+kind: Pod
+metada:
+ name: myapp-pod
+spec:
+  containers:
+  - name: data-processor
+    image: data-proccesor
+  nodeSelector:
+    size: Large
+
+## 31º La afinidad garantiza que los pods se alojen en el nodo concreto que vayamos a elegir, los pods que llevan carga ligera se introducen en los nodos que soporten este tipo de carga.
+
+## Muestra de fichero yaml con selector de nodo Largo:
+nano pod-definition_1.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: myapp-pod
+spec:
+  containers:
+  - name: data-processor
+    image: data-processor
+  nodeSelector:
+    size: Large
+
+## Muestra de fichero yaml con la afinidad
+nano pod-definition_2.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: myapp-pod
+spec:
+  containers:
+  - name: data-processor
+    image: data-processor
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+     nodeSelectorTerms:
+     - matchExpressions:
+       - key: Size
+         operator: In / NotIn / Exists
+         values:
+         - Large
+         - Medium # --> este valor es opcional
+##       - Small
+## Cuando se establece el operador Exists no se aplica el filtro de tamaños
+## El parámetro con el tamaño de una frase sin espacios es para garantizar la integridad en caso de cambiar el nombre del nodo
+
+## Tipos de afinidad de nodo:
+## los disponibles --> requiredDuringSchedulingIgnoredDuringExecution y preferredDuringSchedulingIgnoredDuringExecution
+## Los planeados --> requiredDuringSchedulingRequiredDuringExecution
+
+## DuringScheduling: es el estado en el que el pod no está creado y se creará
+## DuringExecution: es el estado en el que el pod ha estado en ejecución activa
+
+## Si se quiere crear el pod y el nodo compatible está ausente, se verifica el estado de requerido a través del parámetro Required, al no encontrarse el pod no inicia.
+## Cuando necesitamos que esté activo sin importar el nodo requerido, establecemos Preferred y lo coloca en el nodo que esté disponible.
+## Si está activo el pod puede modificar la afinidad del nodo, puede suceder con el cambio de nombre del nodo.
+## El cambio de nombre o el borrado de la etiqueta del tamaño del nodo puede solucionarse con el parámetro Ignored
+
+##
