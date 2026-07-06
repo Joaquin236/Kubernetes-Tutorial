@@ -521,10 +521,10 @@ spec:
 
 kubectl create -f replicaset.yaml
 
-## 14.2º Consultar el set de réplicas activas
+## 14.2º Consultar el set de réplicas activas:
 kubectl get replicaset
 
-## 14.3º Borrar el set de réplicas activas, borrará todo el contenido del set
+## 14.3º Borrar el set de réplicas activas, borrará todo el contenido del set;
 kubectl delete replicaset myapp-replicaset
 
 ## 14.4º Para reemplazar el set usaremos:
@@ -541,10 +541,10 @@ kubectl create -f <name_file.yaml>
 
 ## 16º El despliegue de los deployment también disponen del mismo comando:
 kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
-## El manifiesto del Deployment también debe realizarse manualmente
+## El manifiesto del Deployment también debe realizarse manualmente:
 kubectl apply -f <name_file.yaml>
 
-## 17º Este comando redirige la salida de la interfaz de consola a un fichero nuevo. Si existe sobreescribe su contenido
+## 17º Este comando redirige la salida de la interfaz de consola a un fichero nuevo. Si existe sobreescribe su contenido:
 kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
 ## En las versiones más modernas de Kubernetes admite personalizar el número de replicas a trabajar:
 kubectl create deployment --image=nginx nginx --dry-run=client --replicas=4 -o yaml > nginx-deployment.yaml
@@ -553,8 +553,8 @@ kubectl create deployment --image=nginx nginx --dry-run=client --replicas=4 -o y
 ## Las direcciones IP de los pods no son enrutables con la dirección del host. Impidiendo acceder desde la navegación tradicional
 ## Dentro del nodo se encuentra un servicio que conecta el host con los contenedores activos
 ## Tipos de servicios: ["Node_Port" , "Cluster_IP" , "Load_Balancer"]
-## Node_Port --> Cada contenedor lleva el puerto con su dirección con otra CIDR, el servicio hace de enlace entre el host y el nodo, este servicio tiene su dirección diferente a la del contenedor
-## Fichero yaml del servicio NodePort
+## Node_Port --> Cada contenedor lleva el puerto con su dirección con otra CIDR, el servicio hace de enlace entre el host y el nodo, este servicio tiene su dirección diferente a la del contenedor.
+## Fichero yaml del servicio NodePort;
 apiVersion: v1
 kind: Service
 metadata:
@@ -568,7 +568,7 @@ spec:
     selector:
        app: myapp
        type: front-end 
-## Fichero yaml del pod asociado al servicio, los parámetros del labels se asocian con el yaml del servicio
+## Fichero yaml del pod asociado al servicio, los parámetros del labels se asocian con el yaml del servicio:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -578,7 +578,7 @@ metadata:
     type: front-end
 ## Comando para crear el servicio
 kubectl creade -f <file_name.yaml>
-## Comando para consultar los servicios
+## Comando para consultar los servicios:
 kubectl get services
 ## Después de configurarlo, el navegador GUI del cliente puede visitar el contenido del contenedor que queremos visitar
 ## Cuando hay más de un contenedor, el nodo reparte el servicio entre los contenedores. Cuando hay más de un cluster, el servicio se expande a los demás clusters
@@ -586,7 +586,7 @@ kubectl get services
 
 ## 19º En el diseño del Cluster_IP los servidores de los contenedores se agrupan por sus funciones:
 ## Front-end --> Back-end --> Redis. Cada uno tiene la IP interna del nodo
-## Fichero del Servicio ClusterIP
+## Fichero del Servicio ClusterIP:
 apiVersion: v1
 kind: Service
 metadata:
@@ -600,7 +600,7 @@ spec:
        app: myapp
        type: back-end
 
-## Fichero del Pod asociado al servicio
+## Fichero del Pod asociado al servicio;
 apiVersion: v1
 kind: Pod
 metadata:
@@ -614,7 +614,7 @@ spec:
     image: nginx
 
 ## 20º El servicio Balanced depende de un sistema Cloud compatible con él y una aplicación de MV, si se usa en un entorno no compatible es como un NodePort
-## Fichero yaml del LoadBalancer
+## Fichero yaml del LoadBalancer:
 apiVersion: v1
 kind: Service
 metadata:
@@ -626,7 +626,7 @@ spec:
        port: 80
        nodePort: 30008
 -----------------------------------------------------------------------
-## Fichero NodePort_2
+## Fichero NodePort_2:
 apiVersion: v1
 kind: Service
 metadata:
@@ -729,7 +729,7 @@ curl http://10.22.0.13:8080
 
 ## 22.1º Cuando necesitemos ubicar los Pods en otro namespace escribimos --namespace=<name>:
 kubectl create -f <file_name.yaml> --namespace=<name>
-## También se pude establecer el namespace desde el fichero.yaml
+## También se pude establecer el namespace desde el fichero.yaml:
 nano name_file.yaml
 apiVersion: v1
 kind: Pod
@@ -745,7 +745,7 @@ spec:
     image: nginx
 kubectl create -f <file_name.yaml>
 
-## 22.2º Los namespaces admiten ser creados desde un fichero.yaml
+## 22.2º Los namespaces admiten ser creados desde un fichero.yaml:
 nano name_file.yaml
 apiVersion: v1
 kind: Namespace
@@ -831,19 +831,19 @@ pod/redis created
 kubectl expose pod redis --port=6379 --name=redis-service --type=ClusterIP
 service/redis-service exposed
 
-## 25.4º Crear un deployment con 3 replicas y con imagen kodekloud
+## 25.4º Crear un deployment con 3 replicas y con imagen kodekloud:
 kubectl create deployment webapp --replicas=3 --image=kodekloud/webapp-color
 deployment.apps/webapp created
 
-## 25.5º Crear un pod con puerto 8080
+## 25.5º Crear un pod con puerto 8080:
 kubectl run custom-nginx --image=nginx --port=8080
 pod/custom-nginx created
 
-## 25.6º Crear un namespace nuevo
+## 25.6º Crear un namespace nuevo:
 kubectl create namespace dev-ns
 namespace/dev-ns created
 
-## 25.7º Crear un deploy con el enlace a un namespace
+## 25.7º Crear un deploy con el enlace a un namespace:
 kubectl create deployment redis-deploy --replicas=2 -n dev-ns --image=redis
 deployment.apps/redis-deploy created
 
@@ -877,7 +877,7 @@ spec:
     - containerPort: 8080
   nodeName: node
 
-## 27.3º Cambiamos el nodo sin número por node02
+## 27.3º Cambiamos el nodo sin número por node02:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -919,7 +919,7 @@ target:
   name: node2
 (Estos valores se guardan en el comando con JSON)
 
-## 27.5º Comando curl completo, este comando debe ser modificado para adaptarlo a la situación
+## 27.5º Comando curl completo, este comando debe ser modificado para adaptarlo a la situación;
 curl --header "Content-Type:application/json" --request POST --data '{"apiVersion":"v1", "kind":"Binding","metadata":{"name":"nginx"},"target":{"apiVersion":"v1","kind":"Node","name":"node2"}}' http://$SERVER/api/v1/namespaces/default/pods/$PODNAME/binding # --> Este comando no parece funcionar por ahora
 
 ## 27.6º Esta plantilla lleva el atributo para elegir manualmente el nombre del nodo:
@@ -934,7 +934,7 @@ spec:
   -  image: nginx
      name: nginx
 
-## 28.1º Plantilla con los identicadores de Aplicacción y Función
+## 28.1º Plantilla con los identicadores de Aplicacción y Función:
 nano pod-definition.yaml
 apiVersion: v1
 kind: Pod
@@ -953,7 +953,7 @@ spec:
 ## 28.2º Filtramos los pods por aplicación a través del comando:
 kubectl get pods --selector app=App1
 
-## 28.3º Plantilla de replicaset con la aplicación y función
+## 28.3º Plantilla de replicaset con la aplicación y función:
 nano replicaset.yaml
 
 apiVersion: apps/v1
@@ -982,7 +982,7 @@ spec:
 
 ## Los valores de Labels ubicados en la parte superior del fichero yaml pertenecen a la replica, los de la parte inferior pertenece al pod
 
-## Después se puede enlazar el fichero de replicas con uno de servicios
+## Después se puede enlazar el fichero de replicas con uno de servicios:
 nano service.yaml
 apiVersion: v1
 kind: Service
@@ -996,13 +996,13 @@ spec:
     port: 80
     targetPort: 9376
 
-## 28.4º Las anotaciones son comentarios que permiten guardar el atributo buildversion, se coloca con annotations
+## 28.4º Las anotaciones son comentarios que permiten guardar el atributo buildversion, se coloca con annotations:
 nano fichero.yaml
 (before the spec attribute)
 annotations:
     buildversion: 1.35
 
-## 28.5º Con este comando se puede filtrar los pods según la aplicación en curso
+## 28.5º Con este comando se puede filtrar los pods según la aplicación en curso:
 kubectl get pods --selector=bu
 NAME          READY   STATUS    RESTARTS   AGE
 app-1-8p8f9   1/1     Running   0          2m
@@ -1012,4 +1012,33 @@ app-1-zzxdf   1/1     Running   0          2m
 auth          1/1     Running   0          2m
 db-2-ln6cd    1/1     Running   0          2m
 
-## 29º
+## 29º Para filtrar el acceso de los pods al nodo establecemos el filtro taint:
+kubectl tain nodes <node_name> key=value:taint-effect
+## el taint-effect evaluará si el pod tolera el filtro
+## 1º Filtro --> NoShedule: el pod no recibe el shedule cuando vaya a crearse
+## 2º Filtro --> PreferNoShedule: el pod no tiene garantizado que se le aplique el NoShedule
+## 3º Filtro --> NoExecute: los pods serán desalojados del nodo que cumple con la tolerancia
+
+## Muestra de un comando válido:
+kubectl taint nodes node1 app=myapp:NoShedule
+
+## Comapración entre el comando y el fichero.yaml:
+kubectl taint nodes node1 app*1=*2blue*3:NoShedule*4
+
+nano pod-tain-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: simple-webapp
+spec:
+  containers:
+  - name: simple-webapp
+    image: simple-webapp
+  tolerations:
+  - key: app*1
+    operator: "Equal"*2
+    value: blue*3
+    effect: NoShedule*4
+
+## Para mostrar si el taint está activo le pasamos el grep Taints
+kubectl describe node <name_of_node> | grep Taint
