@@ -1406,18 +1406,19 @@ NAMESPACE      NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILA
 kube-flannel   kube-flannel-ds   1         1         1       1            1           <none>                   12m
 kube-system    kube-proxy        1         1         1       1            1           kubernetes.io/os=linux   12m
 
-## 
+## Obtener todos los pods de todos los namespaces
 kubectl get pods --all-namespaces 
 
-## 
+## Obener los pods del namespace determinado
 kubectl get pods --namespace kube-flannel
 
-## 
+## Obtener la descripción del pod kube-flannel-ds
 kubectl describe pod kube-flannel-ds-qqbhv --namespace kube-flannel
 
-##
+## Crear una plantilla de un deployment con yaml editable
 kubectl create deployment elasticsearch --image=registry.k8s.io/fluentd-elasticsearch:1.20 -n kube-system --dry-run=client -o yaml > fluentd.yaml
 
+## Convierte el deployment en un daemonset
 nano fluentd.yaml
 apiVersion: apps/v1
 kind: DaemonSet
@@ -1440,6 +1441,6 @@ spec:
         name: fluentd-elasticsearch
         resources: {}
 
-##
+## Applica los cambios para crear el daemonset
 kubectl create -f fluentd.yaml 
 daemonset.apps/elasticsearch created
