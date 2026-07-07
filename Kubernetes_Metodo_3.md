@@ -1319,4 +1319,22 @@ spec:
     limits.cpu: 10
     limits.memory: 10Gi
 
-## 
+## 34.1º A la hora de modificar los pods, algunos valores no deben ser modificados, lo que esté debajo del spec, como las variables de entorno, cuentas de servicio y limitador de recursos cuando el pod está activado. Los cambios fallidos son restaurados a través de un fichero temporal que cuando el cambio es correcto se sobreescribe, los valores de las variables de entorno no son editables.
+
+## 34.2º La mejor opción es obtener los valores del pod y redigirlo a un fichero yaml:
+kubectl get pod webapp -o yaml > my-new-pod.yaml
+
+## 34.3º Editar el fichero exportado:
+nano my-new-pod.yaml
+
+## 34.4º Borrar el pod que no fue editado:
+kubectl delete pod webapp
+
+## 34.5º Aplicar el nuevo pod:
+kubectl create -f my-new-pod.yaml
+kubectl apply  -f my-new-pod.yaml
+
+## 34.6º Para los deployments es más fácil desde el modo edición, la plantilla borra los pod y los vuelve a crear:
+kubectl edit deployment my-deployment
+
+##
