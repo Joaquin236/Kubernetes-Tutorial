@@ -953,6 +953,9 @@ spec:
 ## 28.2º Filtramos los pods por aplicación a través del comando:
 kubectl get pods --selector app=App1
 
+## Comando para filtrar por ns:
+kubectl get pods --namespace kube-system 
+
 ## 28.3º Plantilla de replicaset con la aplicación y función:
 nano replicaset.yaml
 
@@ -1337,4 +1340,106 @@ kubectl apply  -f my-new-pod.yaml
 ## 34.6º Para los deployments es más fácil desde el modo edición, la plantilla borra los pod y los vuelve a crear:
 kubectl edit deployment my-deployment
 
+## 35º Comparación entre Deployment, ReplicaSet y DaemonSet: En los deployment y replicaset se realizan copias en los diferentes nodos de trabajo, mientras el daemonset son conjuntos de réplicas con los que llamar múltiples estancias.
+
+                      MONITORING      LOGS VIEWER
+                  ________|_______________|_______
+                 |        |       |       |       |
+                 |        |       |       |       |
+## DaemonSets    #    |   #   |   #   |   #   |   #   |   #
+## ReplicaSets  # #   |  # #  |  # #  |  # #  |  # #  |
+## Deployments  # #   |  # #  |  # #  |  # #  |  # #  |
+## ----------> NODE1  | NODE2 | NODE3 | NODE4 | NODE5 | NODE6
+
+## Cuando se añade o se borra los pods la información queda en el pod y al borrar se pierde lo que llevaba, los daemonsets aseguran la copia de cada pod en todos los clusters. El proceso administrativo de los pods está al cargo del daemonset sin intervención necesaria. En los delpyment y replicaset el sistema de red estaba a cargo del kube-proxy, en los daemonset lo raeliza el calico-network. 
+
+## El diseño del replicaset y el daemnoset es similar:
+nano replicaset-definition.yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+ name: monitoring-daemon
+spec:
+ selectors:
+    matchLabels:
+       app: monitoring-agent
+ template:
+   metadata:
+     labels:
+       app: monitoring-agent 
+   spec:
+     containers:
+     - name: monitoring-agent
+       image: monitoring-agent
+
+nano daemonset-definition.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: monitoring-daemon
+spec:
+ selectors:
+    matchLabels:
+       app: monitoring-agent
+ template:
+   metadata:
+     labels:
+       app: monitoring-agent 
+   spec:
+     containers:
+     - name: monitoring-agent
+       image: monitoring-agent
+
+## Ambos ficheros se crean con kubectl create -f <file_name.yaml>
+kubectl create -f replicaset-definition.yaml
+kubectl create -f daemonset-definition.yaml
+
+## Para consultar el daemonset usaremos:
+kubectl get daemonsets
+
+## Para verificar la estructura usaremos:
+kubectl describe daemonset <daemonset_name>
+
+## Mostrar todos los daemos activos
+kubectl get daemonsets.apps --all-namespaces 
+NAMESPACE      NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kube-flannel   kube-flannel-ds   1         1         1       1            1           <none>                   12m
+kube-system    kube-proxy        1         1         1       1            1           kubernetes.io/os=linux   12m
+
+## 
+kubectl get pods --all-namespaces 
+
+## 
+kubectl get pods --namespace kube-flannel
+
+## 
+kubectl describe pod kube-flannel-ds-qqbhv --namespace kube-flannel
+
 ##
+kubectl create deployment elasticsearch --image=registry.k8s.io/fluentd-elasticsearch:1.20 -n kube-system --dry-run=client -o yaml > fluentd.yaml
+
+nano fluentd.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: elasticsearch
+  name: elasticsearch
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+      - image: registry.k8s.io/fluentd-elasticsearch:1.20
+        name: fluentd-elasticsearch
+        resources: {}
+
+##
+kubectl create -f fluentd.yaml 
+daemonset.apps/elasticsearch created
