@@ -1444,3 +1444,167 @@ spec:
 ## Applica los cambios para crear el daemonset
 kubectl create -f fluentd.yaml 
 daemonset.apps/elasticsearch created
+
+## 36º Los componentes de la arquitectura de kubernetes administran el acceso de los recursos, si están fuera de servicio el sistema maestro, el control-manager, el etcd_cluster y/o el kube-aspiserver, necesitamos a usar solo al kublet. Puede crear el pod pero no ofrecer los detalles, los pods deben estar dentro de un fichero.yaml preconfigurado para usar la nuestra estructura sin el sistema maestro disponible. Cada fichero debe estar almacenado en --> /etc/kubernetes/manifest. Periodicamente se verifica si hay ficheros para crear los pods asegurando que mantiene el servicio activo si se bloquea la aplicación. Cuando necesita reiniciar lo realiza, tras borrar el fichero del directorio el pod desaparece. Esta forma de crear pods se denomina Static Pod; durante este modo no puede administrar las replicas, despliegues o servicios automáticos, la ruta se puede configurar y establecer al kubelet mientras está activo. Cuando se hace algún cambio al fichero, actualiza el pod para recibir los cambios.
+
+## Configurar la ruta de los pods estáticos:
+nano kubeconfig.yaml
+staticPodPatch: /etc/kubernetes/manifest
+
+## El fichero kubelet.service debe llevar una opción compatible:
+nano kubelet.service
+--config=kubeconfig.yaml
+
+## Los pods estáticos se consultan como un contenedor de docker:
+docker ps
+
+## Si se usa el comando kubectl get pods aparece con estado ContainerCreating.
+kubectl get pods
+NAME                READY   STATUS            RESTARTS  AGE
+static-web-node01   0/1     ContainerCreating 0         29s
+
+## Usos del modo estático; si se proporciona los ficheros locales al kubelet.service, se ahorra la necesidad de descargar los ficheros binarios en cada despliegue de pod estático. El servicio reinicia los pods con problemas de ejecución.
+
+## Diferencias entre los Pods y DaemonSets
+# Static Pods: Creado por el kubelet. Despliega El componente de control de despliegues como Pod Estático. Ignorado por el programador de Kube.
+# DaemonSets: Creador por el Controlador de DaemonSet y kube-apiserver. Despliega el Agente de Monitorización, Registro de eventos y Agentes en nodos. Ignorado por el programador de Kube.
+
+## Obtener todos los pods de cualquier namespace
+kubectl get pods --all-namespaces
+
+## Obener todos los deployments de cualquier namespace
+kubectl get deployments --all-namespaces
+
+## Obtener más información sobre los pods
+kubectl get pods --all-namespaces -o wide
+
+## Buscar en el directorio /etc/kubernetes/manifest los ficheros con nombre "kube-api*" y ejecturar 'ls -lh'
+find /etc/kubernetes/manifests -type f -name "kube-api*" -exec ls -l {} \;
+-rw------- 1 root root 3965 Jul  7 14:02 /etc/kubernetes/manifests/kube-apiserver.yaml
+
+## Después un grep y bucar registry para localizar el elemento con los datos de imagen
+find /etc/kubernetes/manifests -type f -name "kube-api*" -exec grep registry {} \;
+    image: registry.k8s.io/kube-apiserver:v1.35.0
+
+## Iniciamos un pod sin reinio, imagen_busybox, llamado static-busybox, mostrar el yaml, con el comando sleep 1000 y exportar sus datos a un fichero.yaml
+kubectl run --restart=Never --image=busybox static-busybox --dry-run=client -o yaml --command -- sleep 1000 > /etc/kubernetes/manifests/static-busybox.yaml
+
+## Verificamos el fichero sin editarlo
+nano static-busybox.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: static-busybox
+  name: static-busybox
+spec:
+  containers:
+  - command:
+    - sleep
+    - "1000"
+    image: busybox
+    name: static-busybox
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}
+
+## Aplicar el /etc/kubernetes/manifests/static-busybox.yaml
+kubectl apply -f static-busybox.yaml 
+pod/static-busybox created
+
+## Editamos el atributo de imagen para añadir otra versión de busybox --> busybox:1.28.4
+image: busybox:1.28.4
+
+## Volvemos a aplicarlo
+kubectl apply -f static-busybox.yaml 
+pod/static-busybox created
+
+## Buscamos el static-greenbox con el buscador de pods
+kubectl get pods -o wide | grep static-greenbox
+static-greenbox-node01        1/1     Running   0              15s    172.17.1.3   node01         <none>           <none>
+
+## Entramos en el nodo01 con el ssh
+ssh node01
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 6.8.0-124-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+
+## Buscamos el fichero config.yaml en find /var/lib/kubelet/
+find /var/lib/kubelet/config.yaml
+/var/lib/kubelet/config.yaml
+
+## Vista previa del fichero config.yaml
+find /var/lib/kubelet/config.yaml -exec cat {} +
+apiVersion: kubelet.config.k8s.io/v1beta1
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    cacheTTL: 0s
+    enabled: true
+  x509:
+    clientCAFile: /etc/kubernetes/pki/ca.crt
+authorization:
+  mode: Webhook
+  webhook:
+    cacheAuthorizedTTL: 0s
+    cacheUnauthorizedTTL: 0s
+cgroupDriver: systemd
+clusterDNS:
+- 172.20.0.10
+clusterDomain: cluster.local
+containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+cpuManagerReconcilePeriod: 0s
+crashLoopBackOff: {}
+evictionPressureTransitionPeriod: 0s
+fileCheckFrequency: 0s
+healthzBindAddress: 127.0.0.1
+healthzPort: 10248
+httpCheckFrequency: 0s
+imageMaximumGCAge: 0s
+imageMinimumGCAge: 0s
+kind: KubeletConfiguration
+logging:
+  flushFrequency: 0
+  options:
+    json:
+      infoBufferSize: "0"
+    text:
+      infoBufferSize: "0"
+  verbosity: 0
+memorySwap: {}
+nodeStatusReportFrequency: 0s
+nodeStatusUpdateFrequency: 0s
+rotateCertificates: true
+runtimeRequestTimeout: 0s
+shutdownGracePeriod: 0s
+shutdownGracePeriodCriticalPods: 0s
+staticPodPath: /etc/just-to-mess-with-you
+streamingConnectionIdleTimeout: 0s
+syncFrequency: 0s
+volumeStatsAggPeriod: 0s
+
+## Para facilitar la búsqueda; usamos el grep para localizar la clave staticPodPath
+find /var/lib/kubelet/config.yaml -exec grep staticPodPath {} +
+staticPodPath: /etc/just-to-mess-with-you
+
+## El valor es un directorio, usamos el comando 'cd' para visitarlo y mostrar el comando ls mostrar contenido
+cd /etc/just-to-mess-with-you
+ls
+greenbox.yaml
+
+## Usa el comando rm -v para borar el fichero.yaml
+rm -v greenbox.yaml 
+removed 'greenbox.yaml'
+
+## Al ejecutar este comando y filtrar por static-greenbox la consulta debe estar vacía
+kubectl get pods --all-namespaces -o wide  | grep static-greenbox
+(EMPTY)
