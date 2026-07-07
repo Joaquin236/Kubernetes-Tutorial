@@ -1843,4 +1843,159 @@ pod "critical-app" deleted from default namespace
 kubectl apply -f critical-app.yaml 
 pod/critical-app created
 
-## 38º El sistema de kubernetes permite expandirse y ofrecer más de dos planificadores para los pods, nodos, contenedores y personalizarlos. Cuando hay varios planificadores cada uno debe llevar distinto nombre para diferenciarse 
+## 38º El sistema de kubernetes permite expandirse y ofrecer más de dos planificadores para los pods, nodos, contenedores y personalizarlos. Cuando hay varios planificadores cada uno debe llevar distinto nombre para diferenciarse.
+
+## Muestra del scheduler-config_1.yaml
+nano scheduler-config.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: default-scheduler
+
+## Muestra del scheduler-config_2.yaml
+nano my-scheduler-config.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: my-scheduler
+leaderElection:
+  leaderElect: true
+  resourceNamespace: kube-system
+  resourceName: lock-object-my-scheduler
+
+## Muestra del scheduler-config_3.yaml
+nano my-scheduler-2-config.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: my-scheduler-2
+
+## Deplegar los nuevos planificadores
+wget https://storage.googleapis.com/kubernetes-release/v1.XX.0/bin/linux/amd64/kube-scheduler
+
+## Otra forma de establecer los planificadores es a través de un fichero-pod-scheduler.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-custom-scheduler
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-scheduler
+    - --address=127.0.0.1
+    - --kubeconfig=/etc/kubernetes/scheduler.conf
+    - --config=/etc/kubernetes/my-scheduler-config.yaml
+     image: k8s.gcr.io/kube-scheduler-amd64:v1.XX.X
+     name: kube-scheduler
+
+## Localizar los pods del kube-system
+kubectl get pods --namespace=kube-system
+kubectl get pods --namespace kube-system
+kubectl get pods -n kube-system 
+NAME                                   READY   STATUS    RESTARTS   AGE
+coredns-6f6c7df987-sr9kf               1/1     Running   0          12m
+coredns-6f6c7df987-x929h               1/1     Running   0          12m
+etcd-controlplane                      1/1     Running   0          13m
+kube-apiserver-controlplane            1/1     Running   0          13m
+kube-controller-manager-controlplane   1/1     Running   0          13m
+
+## Crear el pod con el nuevo plainificador
+nano pod-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  schedulerName: my-custom-scheduler
+
+## importar el fichero
+kubectl apply -f pod-definition.yaml
+
+## Verificar el pod
+kubectl get pods # --> Si hay un error el estado es Pending, si todo va bien estará en Running
+
+## Evaluar si hay fallos
+kubectl describe pod nginx
+
+## Visualizamos el planificador elegido con el comando:
+kubectl get events -o wide
+
+## Los registros de eventos se guardan en:
+kubectl logs my-custom-scheduler --namespace=kube-system
+
+## Localizar la imagen del pod a través de la descripción y filtra el namespace
+kubectl describe pod kube-controller-manager-controlplane -n kube-system | grep Image
+    Image:         registry.k8s.io/kube-controller-manager:v1.35.0
+    Image ID:      registry.k8s.io/kube-controller-manager@sha256:3e343fd915d2e214b9a68c045b94017832927edb89aafa471324f8d05a191111
+
+## Obtener los serviceaccounts
+kubectl get serviceaccounts 
+NAME      AGE
+default   18m
+
+## Consultar los serviceaccounts del namespace y filtrar los que lleven my*
+kubectl get serviceaccounts -n kube-system | grep my
+my-scheduler    
+
+## Consultar los clusterrolebinding y filtrar los que lleven my*
+kubectl get clusterrolebinding | grep my
+my-scheduler-as-kube-scheduler                                  ClusterRole/system:kube-scheduler                                                  5m16s
+my-scheduler-as-volume-scheduler                                ClusterRole/system:volume-scheduler                                                5m16s
+
+## Listar el directorio del usuario
+ls -lh
+total 16K
+-rw-r--r-- 1 root root 336 Jul  7 17:41 my-scheduler-configmap.yaml
+-rw-r--r-- 1 root root 155 Jun 17 11:24 my-scheduler-config.yaml
+-rw-r--r-- 1 root root 893 Jun 17 11:24 my-scheduler.yaml
+-rw-r--r-- 1 root root 105 Jun 17 11:24 nginx-pod.yaml
+
+## Aplicar el fichero my-scheduler-configmap.yaml 
+kubectl apply -f my-scheduler-configmap.yaml 
+configmap/my-scheduler-config created
+
+## Aplicar el fichero my-scheduler.yaml
+kubectl apply -f my-scheduler.yaml 
+pod/my-scheduler created
+
+## Editar el fichero my-scheduler-pod.yaml y corregir la imagen defectuosa
+nano my-scheduler-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+metadata:
+  labels:
+    run: my-scheduler
+  name: my-scheduler
+  namespace: kube-system
+spec:
+  containers:
+  - name: nginx
+    image: registry.k8s.io/kube-scheduler:v1.35.0 
+#    image: registry.k8s.io/kube-controller-manager:v1.35.0 # This image isn't compatible to mission
+  schedulerName: my-custom-scheduler
+
+## Aplicar el fichero my-scheduler.yaml
+kubectl apply -f my-scheduler.yaml 
+pod/my-scheduler configured
+
+## Editar el fichero nginx-pod.yaml y agregar el scheduleName
+nano nginx-pod.yaml
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: nginx 
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+  schedulerName: my-scheduler
+
+## Aplicar el fichero nginx-pod.yaml
+kubectl apply -f nginx-pod.yaml 
+pod/nginx created
+
