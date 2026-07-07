@@ -143,7 +143,7 @@ $ curl <ip_from_above>/bar
 # Request served by bar-app
 # ...
 
-5º Pausar el minikube sin afectar a los servicios activos:
+## 5º Pausar el minikube sin afectar a los servicios activos:
 minikube pause
 
 # Reanudar minikube en pausa:
@@ -1608,3 +1608,239 @@ removed 'greenbox.yaml'
 ## Al ejecutar este comando y filtrar por static-greenbox la consulta debe estar vacía
 kubectl get pods --all-namespaces -o wide  | grep static-greenbox
 (EMPTY)
+
+## 37º Clases prioritaras. Las prioridades ordenan el acceso de los componentes, bases de datos, aplicaciones críticas, trabajos, es importante asegurar que las cargas de trabajo de mayor prioridad se programen sin interrupción frente a las de baja prioridad, cuando un pod de mayor prioridad no consigue iniciarse, detiene un pod de baja prioridad. Las clases prioritarias no tienen namespaces y no se crean dentro del namespace. Las prioridades se establecen con un número negativo y uno positivo, desde 1.000 millones hasta -2.000 millones. Si el valor positivo supera los 2.000 millones está solapándose con las prioridades del sistema y con los componentes del plano de control.
+
+## 37.2º Comando para obtener las clases de prioridad
+kubectl get priorityclass
+
+## 37.3º Creamos ficheros con PriorityClass y Pod para verificar los efectos de cambiar prioridad:
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+ value: 1000000000
+ description: "Priority class for mission critical pods"
+
+#--------------------------------------------------
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: web
+    image: nginx
+    ports:
+      - containerPort: 8080
+  priorityClassName: high-priority
+
+#-----------------------------------------
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000000000
+description: "Priority class for mission critical pods"
+preemtionPolicy: PreemptLowerPriority # --> Los recursos de baja prioridad pierden el acceso a los recursos
+preemtionPolicy: Never # --> Los recursos no serán ofrecidos a otro objeto y se establece una cola de programación, incluso un objeto de baja prioridad puede tener el acceso primero
+
+## Obtener las prioridades del priorityclasses.scheduling.k8s.io 
+kubectl get priorityclasses.scheduling.k8s.io 
+NAME                      VALUE        GLOBAL-DEFAULT   AGE   PREEMPTIONPOLICY
+system-cluster-critical   2000000000   false            16m   PreemptLowerPriority
+system-node-critical      2000001000   false            16m   PreemptLowerPriority
+
+## Obtener las prioridades del prioritylevelconfigurations.flowcontrol.apiserver.k8s.io
+kubectl get prioritylevelconfigurations.flowcontrol.apiserver.k8s.io 
+NAME              TYPE      NOMINALCONCURRENCYSHARES   QUEUES   HANDSIZE   QUEUELENGTHLIMIT   AGE
+catch-all         Limited   5                          <none>   <none>     <none>             17m
+exempt            Exempt    <none>                     <none>   <none>     <none>             17m
+global-default    Limited   20                         128      6          50                 17m
+leader-election   Limited   10                         16       4          50                 17m
+node-high         Limited   40                         64       6          50                 17m
+system            Limited   30                         64       6          50                 17m
+workload-high     Limited   40                         128      6          50                 17m
+workload-low      Limited   100                        128      6          50                 17m
+
+## Obtener el yaml de la prioridad de system-node-critical
+kubectl get priorityclasses system-node-critical -o yaml
+apiVersion: scheduling.k8s.io/v1
+description: Used for system critical pods that must not be moved from their current
+  node.
+kind: PriorityClass
+metadata:
+  creationTimestamp: "2026-07-07T15:34:31Z"
+  generation: 1
+  name: system-node-critical
+  resourceVersion: "67"
+  uid: 3675df42-44fc-4727-8004-fdfb233f040d
+preemptionPolicy: PreemptLowerPriority
+value: 2000001000
+
+## Crear el fichero high-priority.yaml
+nano high-priority.yaml
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 100000
+globalDefault: false
+description: "This priority class is used for high-priority pods."
+preemptionPolicy: PreemptLowerPriority 
+
+## Importar el 1º fichero recién creado
+kubectl create -f high-priority.yaml 
+priorityclass.scheduling.k8s.io/high-priority created
+
+## Crear el fichero low-priority.yaml
+nano low-priority.yaml
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: low-priority
+value: 1000
+globalDefault: false
+description: "This priority class is used for low-priority pods."
+preemptionPolicy: PreemptLowerPriority
+
+## Importar el 2º fichero recién creado
+kubectl create -f low-priority.yaml 
+priorityclass.scheduling.k8s.io/low-priority created
+
+## Crear un pod y exportar el yaml. (Este pod se iniciará automáticamente)
+kubectl run low-priority --image=ngix -o yaml > low-prio-pod.yaml
+
+## Borramos el pod iniciado
+kubectl delete pods low-priority 
+pod "low-priority" deleted from default namespace
+
+## Sustituimos el fichero largo por uno más compacto. (Los atributos ausentes se rellena solo)
+nano low-prio-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: low-prio-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  priorityClassName: low-priority
+
+## Importarmos el low-prio-pod.yaml
+kubectl apply -f low-prio-pod.yaml
+pod/low-prio-pod created
+
+## Copiamos el fichero para crearlo con otro nombre
+cp -v low-prio-pod.yaml high-prio-pod.yaml 
+'low-prio-pod.yaml' -> 'high-prio-pod.yaml'
+
+## Editamos el high-prio-pod.yaml para establecer los nuevos valores
+nano high-prio-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: high-prio-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  priorityClassName: high-priority
+
+## Importamos el fichero.yaml
+kubectl apply -f high-prio-pod.yaml 
+pod/high-prio-pod created
+
+## Comparación de los sistemas de prioridades
+kubectl get pods -o custom-columns="NAME:.metadata.name,PRIORITY:.spec.priorityClassName"
+NAME            PRIORITY
+high-prio-pod   high-priority
+low-prio-pod    low-priority
+
+## Consulta de los pods
+kubectl get pods
+NAME            READY   STATUS    RESTARTS   AGE
+critical-app    0/1     Pending   0          25s
+high-prio-pod   1/1     Running   0          69s
+low-app         1/1     Running   0          25s
+low-prio-pod    1/1     Running   0          4m3s
+
+## Consulta de descripción del pod critical-app
+kubectl describe pod critical-app
+Name:             critical-app
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             <none>
+Labels:           <none>
+Annotations:      <none>
+Status:           Pending
+IP:               
+IPs:              <none>
+Containers:
+  critical-container:
+    Image:      nginx
+    Port:       <none>
+    Host Port:  <none>
+    Limits:
+      memory:  3Gi
+    Requests:
+      cpu:        1
+      memory:     3Gi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-ns8rk (ro)
+Conditions:
+  Type           Status
+  PodScheduled   False 
+Volumes:
+  kube-api-access-ns8rk:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason            Age   From               Message
+  ----     ------            ----  ----               -------
+  Warning  FailedScheduling  105s  default-scheduler  0/1 nodes are available: 1 Insufficient cpu, 1 Insufficient memory. no new claims to deallocate, preemption: 0/1 nodes are available: 1 No preemption victims found for incoming pod.
+
+## Consulta de eventos. Para buscar los fallos usamos grep Warning
+kubectl events | grep Warning
+49m                 Warning   InvalidDiskCapacity       Node/controlplane   invalid capacity 0 on image filesystem
+14m (x3 over 15m)   Warning   Failed                    Pod/low-priority    Failed to pull image "ngix": failed to pull and unpack image "docker.io/library/ngix:latest": failed to resolve reference "docker.io/library/ngix:latest": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+14m (x3 over 15m)   Warning   Failed                    Pod/low-priority    Error: ErrImagePull
+14m (x3 over 15m)   Warning   Failed                    Pod/low-priority    Error: ImagePullBackOff
+14m                 Warning   Failed                    Pod/low-priority    Error: ErrImagePull
+14m                 Warning   Failed                    Pod/low-priority    Failed to pull image "ngix": failed to pull and unpack image "docker.io/library/ngix:latest": failed to resolve reference "docker.io/library/ngix:latest": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+14m                 Warning   Failed                    Pod/low-priority    Error: ImagePullBackOff
+4m1s                Warning   FailedScheduling          Pod/critical-app    0/1 nodes are available: 1 Insufficient cpu, 1 Insufficient memory. no new claims to deallocate, preemption: 0/1 nodes are available: 1 No preemption victims found for incoming pod.
+
+## Obtener el yaml de critical-app
+kubectl get pods critical-app -o yaml > critical-app.yaml
+
+## El fichero original es muy grante y complejo, lo sustituimos por un pod más manejable
+nano critical-app.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: critical-app
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  priorityClassName: high-priority
+
+## Borramos el pod critical-app, está obstruyendo la nueva importación
+kubectl delete pods critical-app 
+pod "critical-app" deleted from default namespace
+
+## Improtamos el fichero.yaml
+kubectl apply -f critical-app.yaml 
+pod/critical-app created
+
+## 38º El sistema de kubernetes permite expandirse y ofrecer más de dos planificadores para los pods, nodos, contenedores y personalizarlos. Cuando hay varios planificadores cada uno debe llevar distinto nombre para diferenciarse 
