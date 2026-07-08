@@ -2190,3 +2190,118 @@ spec:
 ## Después de admitir esta opción, los pods que lleven el namespce sin crear, el sistema los añade sin intervención del usuario.
 kubectl run nginx --image nginx --namespace blue
 kubectl get namespaces
+
+## Listar los ficheros de kubernetes con el comando find y ls unidos
+find /etc/kubernetes/imgvalidation/ -type f -name "*.yaml" -exec ls -hl {} \+
+-rw-r--r-- 1 root root 164 Jul  8 15:41 /etc/kubernetes/imgvalidation/admission-configuration.yaml
+-rw-r--r-- 1 root root 145 Jul  8 15:41 /etc/kubernetes/imgvalidation/imagepolicy-conf.yaml
+-rw-r--r-- 1 root root 494 Jul  8 15:41 /etc/kubernetes/imgvalidation/kubeconf.yaml
+
+## 41.1º Los controladores también tienen la opción de realizar mutaciones a los ficheros y parámetros de configuración de los objetos, algunos atributos aunque no se escriben en el fichero, el sistema los añade a través de las mutaciones en los controladores de admisión. El NamespaceAutoProvision realiza una mutación para crear un objeto que no se creó anteriormente y NameExists valida la operación en curso.
+
+## 41.2º Hay dos controladores especiales llamados MutantingAdmissionWebhook y validantAdminssionWebhook. Se puede configurar para que apunte a un servidor interno de Kubernetes o apuntar a un servidor externo.
+
+## 1º Creamos un servidor de admisión Webhook. La plantilla se descarga con este enlace
+https://github.com/kubernetes/kubernetes/blob/v1.13.0/test/images/webhook/main.go
+
+## 2º Configuramos el servidor de admisión a través de un fichero.yaml
+nano webhook-service.yaml
+apiVersion: adminissionregistration.k8s.io/v1
+kind:
+metadata:
+   name: "pod-policy.example.com"
+webhooks:
+- name: "pod-policy.example.com"
+  clientConfig:
+    service:
+      namespace: "webhook-namespace"
+      name: "webhook-service"
+    caBundle: "Ci0tLS0Qk....tLS0K"
+  rules:
+  - apiGroups:   [""]
+    apiVersions: ["v1"]
+    operations:  ["CREATE"]
+    resources:   ["pods"]
+    scope:       "Namespaced"
+
+## 41.3º A parte de los controladores internos también se puede crear los controladores a petición del usuario.
+
+## Filtrar los ficheros por la palabra clave --> runAsNonRoot:
+grep runAsNonRoot *.yaml
+pod-with-conflict.yaml:    runAsNonRoot: true
+pod-with-override.yaml:    runAsNonRoot: false
+webhook-deployment.yaml:        runAsNonRoot: true
+
+## Filtrar los ficheros por la palabra clave --> securityContext:
+grep securityContext *.yaml
+pod-with-conflict.yaml:# A pod with a conflicting securityContext setting: it has to run as a non-root
+pod-with-conflict.yaml:  securityContext:
+pod-with-defaults.yaml:# A pod with no securityContext specified.
+pod-with-override.yaml:# A pod with a securityContext explicitly allowing it to run as root.
+pod-with-override.yaml:  securityContext:
+webhook-deployment.yaml:      securityContext:
+
+## Crea un pod con busybox y un comando para usar un usuario concreto
+nano pod-with-defaults.yaml 
+# A pod with no securityContext specified.
+# Without the webhook, it would run as user root (0). The webhook mutates it
+# to run as the non-root user with uid 1234.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-defaults
+  labels:
+    app: pod-with-defaults
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "echo I am running as user $(id -u)"]
+
+##
+cat pod-with-override.yaml 
+# A pod with a securityContext explicitly allowing it to run as root.
+# The effect of deploying this with and without the webhook is the same. The
+# explicit setting however prevents the webhook from applying more secure
+# defaults.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-override
+  labels:
+    app: pod-with-override
+spec:
+  restartPolicy: OnFailure
+  securityContext:
+    runAsNonRoot: false
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "echo I am running as user $(id -u)"]
+
+##
+cat pod-with-conflict.yaml 
+# A pod with a conflicting securityContext setting: it has to run as a non-root
+# user, but we explicitly request a user id of 0 (root).
+# Without the webhook, the pod could be created, but would be unable to launch
+# due to an unenforceable security context leading to it being stuck in a
+# 'CreateContainerConfigError' status. With the webhook, the creation of
+# the pod is outright rejected.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-conflict
+  labels:
+    app: pod-with-conflict
+spec:
+  restartPolicy: OnFailure
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 0
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "echo I am running as user $(id -u)"]
+
+## 42º
