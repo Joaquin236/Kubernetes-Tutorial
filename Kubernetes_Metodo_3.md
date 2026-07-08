@@ -1999,3 +1999,194 @@ spec:
 kubectl apply -f nginx-pod.yaml 
 pod/nginx created
 
+## 39.1º La plantilla de los pods se puede establecer para asignar la prioridad, el contenedor y el límite de recursos
+nano pod-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+spec:
+  priorityClassName: high-priority
+  containers: data-processor
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: 10
+
+## 39.2º Este pod solo es válido en un nodo que lleve más de 10 CPU y más de 1Gi de RAM. Si hay más pods en la cola de programación deben esperar a que se les asigne los nodos. Cada uno tiene una prioridad distinta que organiza a través de alta/baja prioridad, el pod que lleva la prioridad alta y se incluye un fichero para configurarla.
+
+nano priority-class-definition.yaml
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000000
+globalDefault: false
+description: "The priority class should be used for XYZ service pods only"
+
+## 39.3º Las fases del filtro de prioridades establece un orden para la llegada de los pods al nodo.
+## 1º --> LLegan a la cola de programación. Se reordena para reubicar según la prioridad de acceso.
+## 2º --> LLega al filtro para descartar los nodos incompatibles con el pod
+## 3º --> LLega a la fase de puntuaciones para evaluar los nodos, el nodo con más puntuación es el elegido para usar el pod
+## 4º --> En la fase de vinculación se termina el proceso de selección y empieza a trabajar el pod
+
+## 39.4º Los plugins/complementos ayudan al sistema con sus funciones, el sistema de filtros de prioridad lleva un complemento en cada fase.
+## 1º --> Scheduling Queue lleva el PrioritySort
+## 2º --> Filtering lleva el NodeResourcesFit, NodeName, NodeUnschedulable, NodeResourcesFit, TaintToleration, NodePorts, NodeAffinity 
+## 3º --> Scoring lleva el NodeResourcesFit, ImageLocaly, NodeResourcesFit, TaintToleration y NodeAffinity
+## 4º --> Binding lleva el DefaultBinder
+
+## 39.5º A parte de los complementos de sistema se puede añadir más complementos y personalizarlos. Los personalizables son:
+## 1º --> queueSort
+## 2º --> prefilter, filter, postfilter
+## 3º --> preScore, score, reserve
+## 4º --> permit, prebind, bind, post,bind
+
+## 39.6º Los programadores pueden más de dos perfiles dentro para trabajar en conjunto:
+nano my-scheduler-2-config.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: my-scheduler-2
+- schedulerName: my-scheduler-3
+- schedulerName: my-scheduler-4
+# Este fichero de configurar el programador lleva tres programadores distintos, disponible desde Kubernetes v1.18
+#-----------------------------------------
+nano my-scheduler-config.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: my-scheduler
+
+#-------------------------------------------------
+nano scheduler-config.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: default
+
+## 39.7º Dentro del planificador del fichero de programación se puede establecer los complementos que se quieren configurar:
+nano my-scheduler-2-config.yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: my-scheduler-2
+  plugins:
+    score:
+      disabled:
+       - name: TaintToleration
+      enabled:
+       - name: MyCustomPluginA
+       - name: MyCustomPluginB
+- schedulerName: my-scheduler-3
+  plugins:
+    preScore:
+      disabled:
+       - name: "*"
+    score:
+      disabled:
+       - name: "*"
+- schedulerName: my-scheduler-4
+## el planificador 2 y 3 llevan un plugin personalizado para la puntuación con el estado de activado y desactivado
+
+## 40.1º El servicio del controlador de admininstración evalua las opciones de seguirad disponibles y verificar si se puede crear un pod.
+
+## 40.2º El fichero .kube/config contiene un yaml con el certificado para autorizar el cluster y el kubelet lee el contenido del fichero.
+
+## 40.3º Los procesos de creación de pods empiezan desde el kubelet y si es válido el certificado sigue a la autentificación, la autorización de los recursos y crear el objeto de destino:
+## 1º --> El kubelet lee los datos de seguridad, el estado de los recursos y valida el servicio.
+## 2º --> Se autentifica el controlador y el objeto
+## 3º --> Se autoriza el acceso al sistema después de autentificar el kubelet.
+## 4º --> El controlador de admisión aplica las medidas de seguridad para evitar el acceso no autorizado al cluster.
+## 5º --> Crea el objeto que se quiere trabajar y alojar.
+
+## Muestra de un fichero.yaml con un rol de autorización, debe poder permitir: listar, consultar, crear, actualizar y borrar. Si no está autorizado se rechaza la operación:
+nano developer-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list","get","create","update","delete"]
+
+## Este fichero solo ofrece la creación de pods en los namespaces determinados
+nano developer-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["create"]
+  resourceNames: ["blue","orange"]
+
+## Fichero yaml con el pod, puede recibir restricciones
+nano web-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+spec:
+   containers:
+      - name: ubuntu
+        iamge: ubuntu:latest
+        command: ["sleep" , "3600"]
+        securityContext:
+          runAsUser: 0
+          capabilities:
+            add: ["MAC_ADMIN"]
+
+## Las restricciones que pueden impedir crear el pod son:
+## 1º Solo permite imagenes registradas
+## 2º No permite acceder con root
+## 3º Solo permite capacidades registradas
+## 4º El pod tiene siempre el mismo label
+
+## Dentro de Kubernetes hay preconfigurados varios tipos de controladores de admisión:
+## 1º --> AlwaysPullImages: Cuando se va a crear el pod inicia la imagen necesaria.
+## 2º --> DefaultStorageCluster: Ofrece siempre el almacenamiento estandar al pod.
+## 3º --> EventRateLimit: Limita las solicitudes al servidor api para no atascarlo, este servicio puede tomar más de una órden a la vez.
+## 4º --> NamespaceExists: Verifica si el nombre del namespace está presente, normalmente si no existe se bloquea el desarrollo pod, pero se puede modificar para crearlo en el mismo momento del pod.
+## 5º --> Los 4 primeros están activados por defecto, pero hay uno que está desactivado: NamespaceAutoProvision; este controlador se encarga de crear un namespace para superar el obstáculo por ausencia de ns.
+
+## Crea un pod con un namespace no declarado:
+kubectl run nginx --image nginx --namespace blue
+## Si el namespace no está presente debe impedir la creación del pod con el mensaje; ns_not_found. El controlador de admisión ha evaluado el pod y solo superó las pruebas del kubelet, la autenticación y la autorización, el verificados de los ns lo bloqueó.
+
+## Comando para consultar los controladores activos
+kube-apiserver -h | grep enable-admission-plugins
+
+## Comando para consultar los controladores activos con comando extenso
+kubectl exec kube-apiserver-controlplane -n -- kube-sytem -- kube-apiserver -h | grep enable-admission-plugins
+
+## Activamos el módulo de admisión para permitir la creación automática de los ns:
+nano kube-apiserver.service
+--enable-admission-plugins=NodeRestriction,NamespaceAutoProvision
+
+## Creamos un fichero.yaml que permite acceder a la nueva opción de crear los ns desantendidos:
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --authorization-mode=Node,RBAC
+    - --advertise-address=172.17.0.107
+    - --allow-privileged=true
+    - --enable-bootstrap-token-auth=true
+    - --enable-admission-plugins=NodeRestriction,NamespaceAutoProvision
+    image: k8s.gcr.io/kube-apiserver-amd64:v1.11.3
+    name: kube-apiserver
+
+## Después de admitir esta opción, los pods que lleven el namespce sin crear, el sistema los añade sin intervención del usuario.
+kubectl run nginx --image nginx --namespace blue
+kubectl get namespaces
