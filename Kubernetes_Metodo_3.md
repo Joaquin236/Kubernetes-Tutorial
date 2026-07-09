@@ -2304,4 +2304,205 @@ spec:
       image: busybox
       command: ["sh", "-c", "echo I am running as user $(id -u)"]
 
-## 42º
+## 42.1º La monitorización facilita la supervisión del nodo, los pods y contenedores, los recursos que se pueden monitoriar son: CPU, RAM & HDD/SSD. Disponemos de un catágolo de herramientas de dominio público para monitorizar el sistema. Metric Server, Elastic stack, Prometheus, DataDog & Dinatrace.
+
+## 42.2º Heapster fue un proyecto inicial de suervisión de kubernetes que abrió el camino a otras herramientas de monitor de sistemas. La herramienta pionera Heapster ha sido descatalogada, ahora se necesita usar Metric Server.
+
+## 42.3º Metric Server recoge los datos de uso de la CPU, RAM & HDD/SSD en uso pero no almacena un historial, todo se recoge en la RAM y no guarda en Disco. CAdvisor es una dependencia que trabaja en conjunto con el kubelet para recopilar en memoria las métricas.
+
+## 42.4º Si estamos usando minikube se puede activar el complemento para usar el Metric Server con el comando:
+minikube addons enable metrics-server
+
+## 42.5º Si la estructura de kubernetes está montada con otra herramienta distinta:
+git clone https://github.com/kubernetes-sigs/metrics-server.git
+kubectl create -f deploy/1.8+
+
+## 42.6º Una vez instalado usamos el comando:
+kubectl top node
+
+## 42.7º También tenemos el comando para monitorizar los pods:
+kubuectl top pod
+
+## Decargar el metric server para supervisar el sistema:
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+## 43.1º En Docker se puede desplegar un simulador de eventos para evaluar el modo de recopilar los eventos:
+docker run -d kodekloud/event-simulator
+
+## 43.2º Los eventos los guarda en el sistema para verlos con el comando;
+dokcer logs -f ecf
+
+## 43.3º Desde kubernetes se puede realizar la misma simulación a partir de un pod, el comando de aplicar y comando de los registros:
+
+## 1º Creamos el pod nuevo:
+nano event-simulator.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: event-simulator-pod
+spec:
+  containers:
+  - name: event-simulator
+    image: kodekloud/event-simulator
+
+## 2º Crear el pod con el fichero
+kubectl apply -f event-simulator.yaml
+
+## 3º Verificar los eventos
+kubectl logs -f event-simulator-pod
+
+## 4º Si añadimos una segunda imagen al contenedor:
+nano event-simulator.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: event-simulator-pod
+spec:
+  containers:
+  - name: event-simulator
+    image: kodekloud/event-simulator
+  - name: image-processor
+    image: some-image-processor
+
+## 5º Modificamos el comando de registros, este cambio implica escribir el nombre de la imagen que se quiere evaluar, el pod hay que actualizarlo con los nuevos valores:
+kubectl logs -f event-simulator-pod event-simulator
+
+## Conusltar el registro de un pod cuyo usuario esté bloqueado
+kubectl logs webapp-1 | grep USER5
+
+## Consultar varios errores de usuarios en un pod
+kubectl logs webapp-2 | grep USER1 ; kubectl logs webapp-2 | grep USER30 ; kubectl logs webapp-2 | grep USER4 ; kubectl logs webapp-2 | grep USER2
+
+## 44.1º Los despliegues ofrecen las opciones de rolling update y rollback para administrar cambios y versionar los despliegues y ofrecer un sistema dinámico.
+kubectl rollout status deployment/myapp-deployment
+kubectl rollout history deployment/myapp-deployment
+
+## 44.2º Existen cinco formas de realizar cambios a un despliegue que esté completo:
+
+## 1º Borrar el despliegue --> modificar el fichero.yaml --> volver a desplegar. Se conoce como Recreate, causa inaccesibilidad a los ususarios.
+
+## 2º Sustituir los pods uno a uno --> retirar los pods antuguos consecutivos y poner los más nuevos, si se hace bien, la aplicación no debe notar la ausencia del servidor ni los usuaros se quedan sin conexión. Se conoce como Rolling update.
+
+## Por defecto se usa la estrategia de Rolling Update
+
+## Plantilla del fichero.yaml
+nano deployment-definition.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: myapp-deployment
+ labels:
+     app: myapp
+     type: front-end
+spec:
+  template:
+     metadata:
+      name: myapp-pod
+      labels:
+         app: myapp
+         type: front-end
+      spec:
+        containers:
+        - name: nginx-container
+          image: nginx
+  replicas: 3
+  selector:
+     matchLabels:
+        type: front-end
+
+## Comando para crear el deploy:
+kubectl create -f deployment-definition.yaml
+
+## Comando para consultar el deploy:
+kubectl get deployments
+
+## Comando para actualizar:
+kubectl apply -f deployment.yaml # --> requiere modificar fichero
+kubectl set image deployment/myapp-deployment nginx=nginx:1.9.1 # --> comando instantaneo, el fichero no recibe este cambio
+
+## Comando para consultar los cambios:
+kubectl rollout status deployment/myapp-deployment
+kubectl rollout history deployment/myapp-deployment
+
+## Deshacer los cambios fallidos:
+kubectl rollout undo deployment/myapp-deployment
+
+## Comando para actualizar un deploy:
+kubectl set image deployments frontend simple-webapp=kodekloud/webapp-color:v2
+
+## Comando para consultar el tipo de actualización del deploy:
+kubectl describe deployments.apps frontend | grep StrategyType
+
+## 45º Comparación entre un contenedor docker y un pod de kubernetes: Las opciones de arranque de los contenedores y pods son similares porque admiten los mismos comandos y argumentos. En docker es una ejecución individual mientras que en kubernetes si se ha usado deployment es una ejecución en grupo.
+
+## FROM --> Ubuntu
+## ENTRYPOINT --> ["sleep"]
+## CMD --> ["5"]
+
+## CMD: command param1 --> ["command","param1"]
+## CMD: sleep 5 --> ["sleep","5"]
+
+## Muestra de comando docker:
+docker build -t ubuntu-sleeper
+#
+docker run ubuntu-sleeper
+#
+docker run ubuntu sleep 5
+#
+docker run --name ubuntu-sleeper ubuntu-sleeper 10
+#
+docker run --name ubuntu-sleeper \
+-- entrypoint sleep2.0
+ubuntu-sleep 10
+
+# Estos contenedores al arrancar lleva el comando sleep para pausar la consola, el argumento son los segundos en pausa.
+
+## Muestra de comando pod para kubernetes:
+nano pod-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-pod
+spec:
+  containers:
+    - name: ubuntu-sleeper
+      image: ubuntu-sleeper
+      command: ["sleep2.0"]
+      args:  ["10"]
+
+## Es fichero contiene el mismo contenedor con el diseño de kubernetes
+
+## Visalizar los comandos asociados a un pod
+kubectl describe pods ubuntu-sleeper | grep -A 3 Command
+    Command:
+      sleep
+      4800
+    State:          Running
+
+## Crear un pod con un ubuntu que lleve el comando sleep 5000
+nano ubuntu-pod-sleeper2.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-2
+spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+    command: ["sleep"]
+    args:  ["5000"]
+
+## Crear un pod que ofrecza un sitio web y comando python app.py --color green
+nano webapp-color-pod-USER.yaml 
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: webapp-green
+  labels:
+      name: webapp-green 
+spec:
+  containers:
+  - name: simple-webapp
+    image: kodekloud/webapp-color
+    command: ["python", "app.py"]
+    args: ["--color", "green"]
