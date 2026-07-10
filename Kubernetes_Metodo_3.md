@@ -2207,7 +2207,7 @@ https://github.com/kubernetes/kubernetes/blob/v1.13.0/test/images/webhook/main.g
 ## 2º Configuramos el servidor de admisión a través de un fichero.yaml
 nano webhook-service.yaml
 apiVersion: adminissionregistration.k8s.io/v1
-kind:
+kind: Service
 metadata:
    name: "pod-policy.example.com"
 webhooks:
@@ -2383,9 +2383,9 @@ kubectl rollout history deployment/myapp-deployment
 
 ## 2º Sustituir los pods uno a uno --> retirar los pods antuguos consecutivos y poner los más nuevos, si se hace bien, la aplicación no debe notar la ausencia del servidor ni los usuaros se quedan sin conexión. Se conoce como Rolling update.
 
-## Por defecto se usa la estrategia de Rolling Update
+## Por defecto se usa la estrategia de Rolling Update:
 
-## Plantilla del fichero.yaml
+## Plantilla del fichero.yaml:
 nano deployment-definition.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -2470,16 +2470,16 @@ spec:
       command: ["sleep2.0"]
       args:  ["10"]
 
-## Es fichero contiene el mismo contenedor con el diseño de kubernetes
+## Es fichero contiene el mismo contenedor con el diseño de kubernetes:
 
-## Visalizar los comandos asociados a un pod
+## Visalizar los comandos asociados a un pod:
 kubectl describe pods ubuntu-sleeper | grep -A 3 Command
     Command:
       sleep
       4800
     State:          Running
 
-## Crear un pod con un ubuntu que lleve el comando sleep 5000
+## Crear un pod con un ubuntu que lleve el comando sleep 5000:
 nano ubuntu-pod-sleeper2.yaml
 apiVersion: v1
 kind: Pod
@@ -2492,7 +2492,7 @@ spec:
     command: ["sleep"]
     args:  ["5000"]
 
-## Crear un pod que ofrecza un sitio web y comando python app.py --color green
+## Crear un pod que ofrecza un sitio web y comando python app.py --color green:
 nano webapp-color-pod-USER.yaml 
 apiVersion: v1 
 kind: Pod 
@@ -2506,3 +2506,456 @@ spec:
     image: kodekloud/webapp-color
     command: ["python", "app.py"]
     args: ["--color", "green"]
+
+## 46º Las variables de entorno permiten modificar ajustes locales de los contenedores y pods.
+
+## Variable de entorno en contenedor Docker:
+docker run -e APP_COLOR=pink simple-weapp-color
+
+## Variable de entorno en kubernetes:
+nano pod-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+      - containerPort: 8080
+    env:
+     - name: APP_COLOR
+       value: pink
+
+## En kubernetes usamos la entrada 'env' con el nombre_variable y valor. En docker usamos la opción -e nombre_variable y valor. Kubernetes ofrece más opciones para los env como ["Plain_Key_Value","ConfigMap","Secrets"]
+
+## Entorno_1: Plain_key_value
+env:
+  - name: APP_COLOR
+    value: pink
+## Entorno_2: ConfigMap
+env:
+  - name: APP_COLOR
+    valueFrom:
+       configMapKeyRef:
+## Entorno_3: Secrets
+env:
+  - name: APP_COLOR
+    valueFrom:
+       secretKeyRef:
+
+## 47.1º En los casos que tenemos muchos ficheros para trabajar se vuelve difícil administrar el sistema, una de las opciones disponibles es el ConfigMap.
+
+## 47.2º El configmap va por separado del fichero y/o el comando de crear el pod. El configmap también se puede establecer por comando y/o fichero.
+
+## Crear el configmap con comando:
+kubectl create configmap <config-name> \
+--from-literal=<key>=<value>
+##
+kubectl create configmap app-config \
+--from-literal=APP_COLOR=blue \
+--from-literal=APP_MODE=prod
+##
+kubectl create configmap <config-name> \
+--from-file=</path/to/file.yaml>
+##
+kubectl create configmap app-config \
+--from-file=app_config.properties
+
+## 47.3º Para establecer el configmap a través de fichero, primero se crea los ficheros con el pod y el valor del configmap:
+## Crear el pod para asociar al fichero configmap:
+nano pod-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+      - containerPort: 8080
+    envFrom:
+      - configMapRef:
+           name: app-config # this name is same to name of configmap_app-config.yaml
+
+## Crear el configmap con fichero:
+nano configmap_app-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_config # this name is some to name of pod-definition.yaml
+data:
+  APP_COLOR: blue
+  APP_MODE: prod
+
+nano configmap_mysql-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql_config
+data:
+  port: 3306
+  max_allowed_packet: 128M
+
+nano configmap_redis-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_config
+data:
+  port: 6379
+  rdb-compression: yes
+
+## El comando create de kubectl se asocia al fichero:
+kubectl create -f pod-definition.yaml # --> creamos el pod
+kubectl create -f configmap.yaml # --> creamos el configmap
+
+## Para consultar los configmaps disponemos de los comandos:
+kubectl get configmaps
+kubectl describe configmaps
+
+## Consultar la variable de entorno con kubectl describe y filtar por entorno:
+kubectl describe pods webapp-color | grep -A 4 env*
+
+## Crea un pod temporal con la variable de entorno:
+nano pod_webapp-color.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: webapp-color
+  name: webapp-color
+  namespace: default
+spec:
+  containers:
+  - env:
+    - name: APP_COLOR
+      valueFrom:
+       configMapKeyRef:
+         name: webapp-config-map
+         key: APP_COLOR
+    image: kodekloud/webapp-color
+    name: webapp-color
+
+## Crea un configmap para asociarlo a un pod:
+kubectl create configmap webapp-config-map \
+--from-literal=APP_COLOR=darkblue \
+--from-literal=APP_OTHER=disregard
+
+## Crea un nuevo pod para sustituir el pod anterior y asociarlo con el configmap:
+nano pod_configmap-webapp-color.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: webapp-color
+  name: webapp-color
+  namespace: default
+spec:
+  containers:
+  - env:
+    - name: APP_COLOR
+      valueFrom:
+       configMapKeyRef:
+         name: webapp-config-map
+         key: APP_COLOR
+    image: kodekloud/webapp-color
+    name: webapp-color
+
+## 48.1º Los ficheros que estamos usando están en texto plano y pueden ser consultados por cualquiera, al suceder esto en caso de que puede ser fitrado datos sensibles, habrá problemas con la confidencialidad, integridad de credenciales y habrá que modificar las credenciales de urgencia. Con el sistema de los secretos codificamos los datos sensibles, también se puede migrar los datos al configmap pero no es el fichero apropiado para las contraseñas. Los secretos también tienen dos formas de ser creados: ["Comandos","Ficheros"]
+
+## 48.2º Los valores que necesitamos codificar, encriptar o esconder digitalmente suelen ser:
+["DB_HOST","mysql"]       # --> Host del sistema de la DB
+["DB_User","root"]        # --> Usuario de la DB
+["DB_password","passwd"]  # --> Contraseña de la DB
+
+## Muestra de secreto creado por comando:
+kubectl create secret generic <secret-name> \
+--from-literal=<key>=<value>  \
+--from-literal=<key>=<value> \
+--from-literal=<key>=<value>
+#
+kubectl create secret generic app_secret \
+--from-literal=DB_Host=mysql \
+--from-literal=DB_User=root \
+--from-literal=DB_Passwd=passwd
+
+## Si se añade muchos campos se necesitará sustituir las entradas --from-literal=<key>=<value> se cambia por un fichero:
+kubectl create secret generic app_secret \
+--from-file=</path/to/file.yaml>
+
+## También se puede localizar el campo específico para cambiar las propiedades:
+kubectl create secret generic app_secret \
+--from-file=app_secret.properties
+
+## Muestra de secreto desde fichero.yaml:
+nano secret-data.yaml # -->  Contiene los datos que necesitamos codificar.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  DB_Host: mysql
+  DB_User: root
+  DB_Password: passwd
+
+# Comando para crear secreto con el fichero
+kubectl create -f <secret-data.yaml>
+
+## El fichero sigue siendo un texto plano legible pero el sistema codifica los datos a través de base64.
+echo "1010101" | base64 # --> Secuencia binaria en bruto
+MTAxMDEwMQo= # --> Secuencia binaria codificada
+#
+echo "MTAxMDEwMQo=" | base64 --decode # --> Secuencia binaria codificada para decodificar
+1010101 # --> Secuencia binaria en bruto de nuevo
+
+## El sistema recolecta los tres valores y los devuelve con esta apariencia
+echo "mysql" | base64
+bXlzcWwK
+echo "root" | base64
+cm9vdAo=
+echo "passwd" | base64
+cGFzc3dkCg==
+
+## Consultamos el estado de los secrets en:
+kubectl get secrets
+kubectl describe secrets
+kubectl get secrets <name_secret> -o yaml
+
+## El sistema devuelve los valores originales con la opción --decode que ofrece base64
+echo "bXlzcWwK" | base64 --decode
+mysql
+echo "cm9vdAo=" | base64 --decode
+root
+echo "cGFzc3dkCg==" | base64 --decode
+passwd
+
+## Fichero codificado:
+nano secret-data.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  DB_Host: bXlzcWwK
+  DB_User: cm9vdAo=
+  DB_Password: cGFzc3dkCg==
+
+## Con el secrect creado agregamos el fichero con el pod:
+nano pod-definition.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+labels:
+  name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+      - containerPort: 8080
+    envFrom:
+      - secretRef:
+          name: app-secret
+
+## Con el comando de aplicar/crear definimos el contenido del pod:
+kubectl create -f pod-definition.yaml
+
+## Consultar los secrets activos
+kubectl get secrets -o wide 
+NAME              TYPE                                  DATA   AGE
+dashboard-token   kubernetes.io/service-account-token   3      77s
+
+## Consultar la descripción del secret dashboard
+kubectl describe secrets dashboard-token 
+Name:         dashboard-token
+Namespace:    default
+Labels:       <none>
+Annotations:  kubernetes.io/service-account.name: dashboard-sa
+              kubernetes.io/service-account.uid: d1aba15d-3dc6-4440-9f24-829ff1326aa4
+
+Type:  kubernetes.io/service-account-token
+
+Data
+====
+ca.crt:     570 bytes
+namespace:  7 bytes
+token:      Big_Data_Crythed
+
+## Crear un secreto imperativo para una conexión con un servidor SQL:
+kubectl create secret generic db-secret --from-literal=DB_Host=sql01 --from-literal=DB_User=root --from-literal=DB_Password=password123
+secret/db-secret created
+
+## Crear el pod para usar el secreto:
+nano webapp-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-pod
+  labels:
+    name: webapp-pod
+  namespace: default
+spec:
+  containers:
+  - name: webapp
+    image: kodekloud/simple-webapp-mysql
+    imagePullPolicy: Always
+    envFrom:
+    - secretRef:
+        name: db-secret
+
+## 49.1º Los pod multicontendor ofrece servicio a más de dos contenedores simultáneos a partir de microservicios para distribuir código independiente y reutilizable. Facilitando la escalada del sistema, incluso pueden trabajar juntos en un mismo pod. La función multicontenedor comparte un ciclo de vida dentro del pod, cuando es creado, es eliminado al realizar el comando de borrado, si la aplicación está dentro del pod del servidor también se borrará al estar dentro del mismo pod, lleva el mismo parámetro de red y almacenamiento.
+
+## Muestra de un pod que lleve dos contenedores
+nano webapp-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp
+  labels:
+    name: simple-webapp
+  namespace: default
+spec:
+  containers:
+  # Container 1
+  - name: web-app # array
+    image: web-app
+    ports:
+      - containerPort: 8080
+  # Container 2    
+  - name: main-app
+    image: main-app
+
+## 49.2º Los pods Co-Located Containers arrancan los dos contenedores a la vez, su contenido se expresa con arrays.
+nano webapp-pod_Co-Located.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp
+  labels:
+    name: simple-webapp
+  namespace: default
+spec:
+  containers:
+  - name: web-app
+    image: web-app
+    ports:
+      - containerPort: 8080
+  - name: main-app
+    image: main-app
+
+## 49.3º Los pods Regular Init Containers tienen un ciclo de vida determinado, cuando termina un contenedor le sigue el siguiente hasta llegar al contenedor principal y cuando termina el pod se detiene.
+nano webapp-pod_Regular_Init_Containers.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp
+  labels:
+    name: simple-webapp
+  namespace: default
+spec:
+  containers:
+  - name: web-app
+    image: web-app
+    ports:
+      - containerPort: 8080
+  initContainers:
+  - name: db-checker
+    image: busybox
+    command: "wait-for-db-to-start.sh"
+  - name: api-checker
+    image: busybox
+    command: "wait-for-another-api.sh"
+
+## 49.4º Los pods Sidecar Containers tienen una configuración similar a los Regular Init Containers, las diferencias son: el contenedor principal arranca sin esperar a que se acabe los contendores anteriores y se reinician durante el fin de ciclo de vida.
+nano webapp-pod_Sidecar_Containers.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp
+  labels:
+    name: simple-webapp
+  namespace: default
+spec:
+  containers:
+  - name: web-app
+    image: web-app
+    ports:
+      - containerPort: 8080
+  initContainers:
+  - name: log-shipper
+    image: busybox
+    command: "setup-log-shipper.sh"
+    restartPolicy: Always
+
+## Filtrar los contenedores del pod por nombre:
+kubectl get pods  blue -o yaml | grep name
+
+## Crear un pod con dos contenedores y un comando de ejecución que ponga a un contenedor en reposo:
+nano yellow_pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: yellow
+  labels:
+    name: yellow
+  namespace: default
+spec:
+  containers:
+  - name: lemon
+    image: busybox
+    command: ["sleep"]
+    args: ["1000"]
+    ports:
+      - containerPort: 8080
+  - name: gold
+    image: redis
+
+## Aplica el pod yellow_pod.yaml:
+kubectl apply -f yellow_pod.yaml
+
+## Verificar los registros del namespace elastic-stack y de kibana:
+kubectl -n elastic-stack logs kibana 
+
+## Describir el pod app del namespace elastic-stack:
+kubectl describe pod app -n elastic-stack
+
+## Revisar el log del namespace elastic-stack:
+kubectl -n elastic-stack exec -it app -- cat /log/app.log
+
+## Crear el pod app para supervisar:
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: app
+  name: app
+  namespace: elastic-stack
+spec:
+  initContainers:
+  - name: sidecar
+    image: kodekloud/filebeat-configured
+    restartPolicy: Always
+    volumeMounts:
+      - name: log-volume
+        mountPath: /var/log/event-simulator
+
+  containers:
+  - image: kodekloud/event-simulator
+    name: app
+    resources: {}
+    volumeMounts:
+    - mountPath: /log
+      name: log-volume
+
+  volumes:
+  - hostPath:
+      path: /var/log/webapp
+      type: DirectoryOrCreate
+    name: log-volume
+
+##
+
