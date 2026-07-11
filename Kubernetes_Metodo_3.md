@@ -2957,5 +2957,553 @@ spec:
       type: DirectoryOrCreate
     name: log-volume
 
-##
+## Filtrar el initContainer de los pods
+kubectl describe pods blue | grep  initContainer
+  Normal  Pulling    98s   kubelet            spec.initContainers{init-myservice}: Pulling image "busybox"
+  Normal  Pulled     98s   kubelet            spec.initContainers{init-myservice}: Successfully pulled image "busybox" in 562ms (562ms including waiting). Image size: 2236931 bytes.
+  Normal  Created    98s   kubelet            spec.initContainers{init-myservice}: Container created
+  Normal  Started    98s   kubelet            spec.initContainers{init-myservice}: Container started
 
+## Filtrar la descripción de un pod por estado
+kubectl describe pods purple | grep State*
+Status:           Pending
+    State:          Running
+    State:          Waiting
+    State:          Waiting
+
+## Filtrar el initContainer de los pods una vez más
+kubectl describe pods purple | grep init*
+  Normal  Pulled     5m6s  kubelet            spec.initContainers{warm-up-1}: Container image "busybox:1.28" already present on machine and can be accessed by the pod
+  Normal  Created    5m6s  kubelet            spec.initContainers{warm-up-1}: Container created
+  Normal  Started    5m6s  kubelet            spec.initContainers{warm-up-1}: Container started
+
+## Reemplaza un pod dañado por uno nuevo
+nano red_pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: red
+  namespace: default
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - echo The app is running! && sleep 3600
+    image: busybox:1.28
+    name: red-container
+  initContainers:
+  - image: busybox
+    name: red-initcontainer
+    command: 
+      - "sleep"
+      - "20"
+
+## Verifica los eventos de un pod
+kubectl describe pods orange | grep -A20 Event
+
+## 50.1º El sistema de autoescalado evalua cuando y como debe escalar los servidores, pods, namespaces y nodos activos. Cuando se ubaba mucho los servidores físicos se escalaban cuando había un margen para ofrecer más volumen de software, cuando se llegaban más usuarios y el servidor no lo afrontaba; se desconecaba, se cambiaba el procesador, memoria, se aumentaba el espacio en disco y se actualizaba las aplicaciones necesarias. Este tipo de escalado es el escalado vertical.
+
+## 50.2º Mientras que el escalado horizontal consiste en agregar un servidor nuevo que ofrece los mismos servicios que los demás servidores activos, evitando apagar el servidor inicial.
+
+## 50.3º El osquestardor que integra kubernetes realiza esta operación. Tiene que elegir entre escalar la infraestructura del cluster y/o scalar la carga de trabajo.
+
+## 50.4º El escalado de cluster puede ser vertical y/o horizontal, en el vertical añade más recursos al contenedor existente, en el horizontal añade más pods.
+
+## 50.5º El escalado de trabajo de carga puede ser vertical y/o horizontal, en el vertical se añade más recursos al contenedor existente para que ofrezca más capacidad, en el horizontal añade contenedores nuevos para complementar el contenedor existente.
+
+## 50.6º Cuando se hace manualmente un escalado de cluster se usa el comando a nivel horizontal:
+kubeadm join
+
+## 50.7º Cuando se hace manualmente un escalado de carga de trabajo se usa el comando a nivel horizontal:
+kubeadm scale
+
+## 50.8º Para escalar manualmente la carga de trabajo en nivel vertical se una el comando:
+kubectl edit
+
+## 50.9º Las opciones para un escalado automático son: ["Cluster_Autoscaler", "Horizontal_Pod_Autoscaler","Vertical_Pod_Autoscaler"]
+
+## 51.1º El escalado horizontal manual se aplicará cuando el pod activo esté alcanzando cerca del umbral de recursos máximos alcanzados.
+
+## Se establece un deployment con limitación:
+nano deployment_limit.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment_limit
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "250m"
+          limits:
+            memory: "500m"
+
+## El comando para monitorizar es:
+kubectl top pod nginx-deployment_limit
+
+## Si necesitamos mejorarlo usamos el comando:
+kubectl scale deployment nginx-deployment_limit --replicas=3
+
+## 51.2º Cuando está activado el autoscalado horizontal de pods, monitoriza a los pods, añade recursos nuevos cunado los necesita y los borra cuando dejan de ser necesarios.
+
+## El comando para un escalado horizontal de pods automático es:
+kubectl autoscale deployment nginx-deployment_limit \
+--cpu-percent=50 --min=1 --max=10
+
+## El HPA puede ser supervisado con el comando:
+kubectl get hpa -o wide
+
+## Para borrar el autoescalado usaremos:
+kubectl delete hpa nginx-deployment_limit
+
+## Crear un deploy que incluya un servicio interno:
+nano deployment.yml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-web-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask
+        image: rakshithraka/flask-web-app
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-web-app-service
+spec:
+  type: ClusterIP
+  selector:
+    app: flask-app
+  ports:
+   - port: 80
+     targetPort: 80  
+
+## Escalar el deploy con un comando:
+kubectl scale deployment --replicas=3 flask-web-app 
+deployment.apps/flask-web-app scaled
+
+## crear un nuevo deploy para verificar su estado inicial y modificarlo después
+nano deployment.yml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 7
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+#        resources:
+#         requests:
+#           cpu: 100m
+#        limits:
+#           cpu: 200m
+
+## Crea un fichero de autoescalado horizontal
+nano autoscale.yml 
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  creationTimestamp: null
+  name: nginx-deployment
+spec:
+  maxReplicas: 3
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 80
+        type: Utilization
+    type: Resource
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+status:
+  currentMetrics: null
+  desiredReplicas: 0
+  currentReplicas: 0
+
+## Aplica el fichero
+kubectl apply -f autoscale.yml 
+horizontalpodautoscaler.autoscaling/nginx-deployment created
+
+## El fichero de despliegue tiene un bug, corrige el bug y vuelve a desplegarlo, verifica si está bien con este comando:
+kubectl get hpa --watch
+NAME               REFERENCE                     TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+nginx-deployment   Deployment/nginx-deployment   cpu: 0%/80%   1         3         3          7m28s
+nginx-deployment   Deployment/nginx-deployment   cpu: 0%/80%   1         3         1          7m30s
+
+## 52.1º Redimensiar los pods permiten modificarlos y estar operativos, por defecto la mejor forma de actualizar un pod es borrando y crearlo otra vez, esto perjudica a los que están conectados al servicio del pod. Se estima que estará activada por defecto en alguna versión futura del sistema kubernetes. Necesitamos activar la función FEATURE_GATES=InPlacePodVerticalScaling=true
+
+## 52.2º Limitaciones a la hora de escalar:
+## 1º Solo la CPU y RAM pueden ser cambiados
+## 2º La clase POD y QoS no pueden cambiar
+## 3º Los contenedores no pueden ser redimensionados
+## 4º Los limitadores de recursos no pueden ser borrados
+## 5º La limitación de memoria de un contenedor no puede establecerse por debajo del uso actual; si el contenedor está en este estado, el redimensionador estará mostrará 'En Progreso' hasta que el limite de memoria sea posible
+## 6º Las ventanas de los pods no pueden redimensionar
+
+## 52.3º En el escalado vertical necesitamos editar el fichero y aplicar los cambios necesarios
+
+## Crear un deploy que debemos actualizar después:
+nano deployment.yml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        resources:
+         requests:
+           cpu: 250m
+        limits:
+           cpu: 500m
+
+## Verificar el despliegue
+kubectl top nginx-deployment
+
+## Editamos el fichero, solo tenemos que editar la linea de requests.cpu
+kubectl edit deployment nginx-deployment
+(Localiza los limitadores y establece)
+spec.containers.resources.requests.cpu: 1
+
+## 53.3º El autoescalador vertical de pods evalúa las métricas, añade recursos nuevos y balancea el estado garantizando la estabilidad. 
+
+## Crear un fichero para el autoescalado:
+nano vertical-pod-autoscaler.yaml
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: my-app-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "my-app"
+        minAllowed:
+          cpu: "250"
+        maxAllowed:
+          cpu: "2"
+        controlledResources: ["cpu"]
+
+
+## Obtener los pods del ns kube-system
+kubectl get pods -n kube-system | vpa
+
+## 53.4º El parámetro updatePolicy.updateMode se puede configurar con varias opciones:
+["OFF","Solo_recomendaciones;_no_realiza_cambios"]
+["Initial","Solo_cambia_en_la_creación_del_pod;_después_no"]
+["Recreate","solo_si_el_consumo_está_en_el_rango"]
+["Auto","actualiza_pods_existentes_para_numeros_recomendados,_por_ahora,es_como_el_modo_recreate_pero_cuando_el_In-place-update_está_soportado_por_pod_resources_esté_disponible_este_es_el_modo_preferido"]
+
+## Describimos el vpa creado
+kubectl describe vpa my-app-vpa
+
+## 53.5º Diferencias entre Escalada Vertical y Horizontal
+["Scaling_Method"],["Incrementa_CPU_&_RAM"],["Añade/Borra_Pods_basados_en_carga"]
+["Pod_Behavior"],["Reduce_Pods_al_aplicar_nuevos_valores"],["Mantiene_los_pods_existentes"]
+["Handles_Traffic_Spikes?"],["Requiere_el_reinicio_de_pod"],["Añade_nuevos_pods"]
+["Optimizes_Cost?"],["Previene_el_sobre-aprovisionamiento_de_recuros"],["Anula_los_pod_innecesarios"]
+["Best_for"],["Trabajos_estables"],["Aplicaiones_web,microservicios"]
+["Example_Uses_Cases"],["Bases_de_datos"],["Servicios_web,microservicio"]
+
+## Descargar el repositorio de autoscaler
+git clone https://github.com/kubernetes/autoscaler.git
+
+## Ubicarse en --> autoscaler/vertical-pod-autoscaler/hack/
+cd autoscaler/vertical-pod-autoscaler/hack/
+
+## Verificar si el fichero vpa-up.sh es ejecutable
+chmod -v +x vpa-up.sh 
+./vpa-up.sh 
+
+## Verificar los crds y filtrar por verticalpodautoscaler
+kubectl get crds | grep verticalpodautoscaler
+
+## Verificar los pods por el ns kube-system y filtrar por vpa
+kubectl get pods --namespace kube-system | grep vpa
+
+## Crear el fichero flask-app.yml
+nano flask-app.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+  labels:
+    app: flask-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        image:  kodekloud/flask-session-app:1 
+        ports:
+        - name: http
+          containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app-service
+  labels:
+    app: flask-app
+spec:
+  selector:
+    app: flask-app
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+---
+apiVersion: "autoscaling.k8s.io/v1"
+kind: VerticalPodAutoscaler
+metadata:
+  name: flask-app
+spec:
+  # recommenders field can be unset when using the default recommender.
+  # When using an alternative recommender, the alternative recommender's name
+  # can be specified as the following in a list.
+  # recommenders: 
+  #   - name: 'alternative'
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: flask-app
+  updatePolicy:
+    updateMode: "Recreate"
+    evictionRequirements:
+      - resources: ["cpu", "memory"]
+        changeRequirement: TargetHigherThanRequests
+  resourcePolicy:
+    containerPolicies:
+      - containerName: '*'
+        minAllowed:
+          cpu: 100m
+          memory: 100Mi
+        maxAllowed:
+          cpu: 1
+          memory: 500Mi
+        controlledResources: ["cpu", "memory"]
+
+## Desplegar el fichero flask-app.yml --> fichero de deploy
+kubectl create -f flask-app.yml 
+
+## Verificar los logs del flask-app --> 1
+kubectl logs flask-app-8676bb879b-8tc6k 
+
+## Verificar los logs del flask-app --> 2
+kubectl logs replicasets/flask-app-8676bb879b 
+
+## Escalar el deploy flask-app a 2 replicas
+kubectl scale deployment flask-app --replicas=2
+
+## Evaluar el deploy
+kubectl get deployment flask-app -o wide 
+
+## Evaluar los pods de flask-app
+kubectl get pods -l app=flask-app
+
+## Describir el vpa de flask-app
+kubectl describe vpa flask-app
+
+## Crear el fichero vpa-cpu-test.yml
+nano vpa-cpu-testing.yml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app-4
+  labels:
+    app: flask-app-4
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-app-4
+  template:
+    metadata:
+      labels:
+        app: flask-app-4
+    spec:
+      containers:
+      - name: flask-app-4
+        image:  kodekloud/flask-session-app:1 
+        ports:
+        - name: http
+          containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app-4-service
+  labels:
+    app: flask-app-4
+spec:
+  type: NodePort
+  selector:
+    app: flask-app-4
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+    nodePort: 30080
+
+## Evaluar el top de los pod
+kubectl top pod 
+error: metrics not available yet
+
+## Crear el fichero vpa-cpu.yml
+nano vpa-cpu.yml 
+---
+apiVersion: "autoscaling.k8s.io/v1"
+kind: VerticalPodAutoscaler
+metadata:
+  name: flask-app
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: flask-app-4
+  updatePolicy:
+    updateMode: "Off"  # You can set this to "Auto" if you want automatic updates
+  resourcePolicy:
+    containerPolicies:
+      - containerName: '*'
+        minAllowed:
+          cpu: 100m
+        maxAllowed:
+          cpu: 1000m
+        controlledResources: ["cpu"]
+
+## Aplicar el fichero yaml
+kubectl apply -f vpa-cpu.yml 
+verticalpodautoscaler.autoscaling.k8s.io/flask-app created
+
+## Verificar los vpa
+kubectl get vpa
+NAME        MODE   CPU   MEM   PROVIDED   AGE
+flask-app   Off                           5s
+
+## Crear un scrip bash y usar una 2º Ventana de consola
+nano load.sh 
+#!/bin/bash
+
+echo "Load initiated in the background. Please do not terminate this process."
+
+timeout 1000s bash -c 'for i in {1..10}; do (while true; do curl -s http://controlplane:30080 > /dev/null; done) & done; wait'
+
+## Crear el fichero flask-app_record.yaml
+nano flask-app_record.yaml
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  annotations:
+  name: flask-app
+  namespace: default
+spec:
+  resourcePolicy:
+    containerPolicies:
+    - containerName: '*'
+      controlledResources:
+      - cpu
+      maxAllowed:
+        cpu: 1000m
+      minAllowed:
+        cpu: 100m
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flask-app-4
+  updatePolicy:
+    updateMode: "Off"
+status:
+  conditions:
+  - lastTransitionTime: "2024-11-07T06:18:17Z"
+    status: "True"
+    type: RecommendationProvided
+  recommendation:
+    containerRecommendations:
+    - containerName: flask-app-4
+      lowerBound:
+        cpu: 100m
+      target:
+        cpu: 143m
+      uncappedTarget:
+        cpu: 143m
+      upperBound:
+        cpu: "1"
+
+## Crear un fichero con el contenido del echo
+echo "143m" > /root/target
+
+## Aplicar el fichero.yaml
+kubectl apply -f flask-app_record.yaml 
+verticalpodautoscaler.autoscaling.k8s.io/flask-app configured
+
+## 54.1º
