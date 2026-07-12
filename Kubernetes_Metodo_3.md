@@ -3506,4 +3506,310 @@ echo "143m" > /root/target
 kubectl apply -f flask-app_record.yaml 
 verticalpodautoscaler.autoscaling.k8s.io/flask-app configured
 
-## 54.1º
+## 54.1º Cuando un nodo deja de funcionar y los pods no están respaldados, la aplicación y los clientes están desconectados, cuando transcurre más de cinco minutos, el sistema da el nodo por perdido, si después se inicia empieza desde cero.
+
+## 54.2º Un parámetro que se puede usar en los ficheros yaml es:
+tolerationSeconds: 3600
+
+## 54.3º Para administrar los nodos con problemas se usan los comandos:
+kubectl drain node-1
+kubectl uncordon node-1
+kubectl cordon node-1
+
+## Los nodos drenados pierden el pod pero si está establecido por un deploy se recompone con otro nodo.
+
+## Los nodos marcados con el comando cordon están establecidos como no-programable.
+
+## El comando uncordon retira la marca para recibir pod nuevos.
+
+## Obtener los nodos activos:
+kubectl get nodes -o wide 
+NAME           STATUS   ROLES           AGE     VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+controlplane   Ready    control-plane   5m28s   v1.35.0   10.244.170.133   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+node01         Ready    <none>          4m56s   v1.35.0   10.244.147.128   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+
+## Obtener los deploys activos:
+kubectl get deployments -o wide 
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES         SELECTOR
+blue   3/3     3            3           65s   nginx        nginx:alpine   app=blue
+
+## Obtener los pods activos:
+kubectl get pods -o wide 
+NAME                    READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
+blue-6466bf85df-d6wf7   1/1     Running   0          2m12s   172.17.1.3   node01         <none>           <none>
+blue-6466bf85df-k57ll   1/1     Running   0          2m12s   172.17.0.4   controlplane   <none>           <none>
+blue-6466bf85df-t4t5q   1/1     Running   0          2m12s   172.17.1.2   node01         <none>           <none>
+
+## Establece el modo mantenimiento al nodo1 y acordonalo:
+kubectl drain node01 --ignore-daemonsets ; kubectl cordon node01
+node/node01 already cordoned
+Warning: ignoring DaemonSet-managed Pods: kube-flannel/kube-flannel-ds-bgxqg, kube-system/kube-proxy-54j7k
+evicting pod default/blue-6466bf85df-t4t5q
+evicting pod default/blue-6466bf85df-d6wf7
+pod/blue-6466bf85df-t4t5q evicted
+pod/blue-6466bf85df-d6wf7 evicted
+node/node01 drained
+node/node01 already cordoned
+
+## El nodo01 se marcará como desactivado después de detenerlo:
+kubectl get nodes -o wide 
+NAME           STATUS                     ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+controlplane   Ready                      control-plane   13m   v1.35.0   10.244.170.133   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+node01         Ready,SchedulingDisabled   <none>          12m   v1.35.0   10.244.147.128   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+
+## Después del mantenimiento vuelve a activarlo:
+kubectl uncordon node01 
+node/node01 uncordoned
+
+## El nodo no recibió ningún pod existenete:
+kubectl get nodes -o wide 
+NAME           STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+controlplane   Ready    control-plane   15m   v1.35.0   10.244.170.133   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+node01         Ready    <none>          14m   v1.35.0   10.244.147.128   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+##
+kubectl get pods -o wide 
+NAME                    READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
+blue-6466bf85df-bbvcc   1/1     Running   0          3m27s   172.17.0.6   controlplane   <none>           <none>
+blue-6466bf85df-frfnn   1/1     Running   0          3m27s   172.17.0.5   controlplane   <none>           <none>
+blue-6466bf85df-k57ll   1/1     Running   0          9m38s   172.17.0.4   controlplane   <none>           <none>
+
+## Describe el nodo controlplane:
+kubectl describe nodes controlplane
+
+## El nodo node01 necesita otro mantenimiento:
+node/node01 cordoned
+error: unable to drain node "node01" due to error: cannot delete cannot delete Pods that declare no controller (use --force to override): default/hr-app, continuing command...
+There are pending nodes to be drained:
+ node01
+cannot delete cannot delete Pods that declare no controller (use --force to override): default/hr-app
+node/node01 already cordoned
+
+## El pod hr-app está bloqueando la desconexión del pod:
+kubectl get pods -o wide 
+NAME                    READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
+blue-6466bf85df-bbvcc   1/1     Running   0          8m42s   172.17.0.6   controlplane   <none>           <none>
+blue-6466bf85df-frfnn   1/1     Running   0          8m42s   172.17.0.5   controlplane   <none>           <none>
+blue-6466bf85df-k57ll   1/1     Running   0          14m     172.17.0.4   controlplane   <none>           <none>
+hr-app                  1/1     Running   0          2m19s   172.17.1.4   node01         <none>           <none>
+
+## Acordona el nodo node01
+kubectl cordon node01
+node/node01 cordoned
+
+## Verifica el estado de los pods:
+kubectl get pods -o wide 
+NAME                      READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
+blue-6466bf85df-bbvcc     1/1     Running   0          14m     172.17.0.6   controlplane   <none>           <none>
+blue-6466bf85df-frfnn     1/1     Running   0          14m     172.17.0.5   controlplane   <none>           <none>
+blue-6466bf85df-k57ll     1/1     Running   0          20m     172.17.0.4   controlplane   <none>           <none>
+hr-app-759cb554bf-sqt2z   1/1     Running   0          4m10s   172.17.1.5   node01         <none>           <none>
+
+## 55º Las versiones de los componentes de kubernetes son compatibles entre sí sin necesidad de tener el más reciente pero si necesita actualizar se puede realizar desde los comandos: apt update ; apt full-upgrade && kubeadm upgrate. A parte de elegir las versiones de los componentes, cluster, nodos, etc.
+
+## Verificar la versión de los nodos:
+kubectl get nodes -o wide
+NAME           STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+controlplane   Ready    control-plane   25m   v1.34.0   10.244.127.208   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
+node01         Ready    <none>          24m   v1.34.0   10.244.56.39     <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
+
+## Localiza los taints en los dos nodos a través de la descripción:
+kubectl describe nodes node01 | grep -i taint
+Taints:             <none>
+
+kubectl describe nodes controlplane | grep -i taint
+Taints:             <none>
+
+## Localiza los deploy activos
+kubectl get deployments -o wide 
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES         SELECTOR
+blue   5/5     5            5           3m59s   nginx        nginx:alpine   app=blue
+
+## Verifica la version de kubeadm
+kubeadm version
+kubeadm version: &version.Info{Major:"1", Minor:"34", EmulationMajor:"", EmulationMinor:"", MinCompatibilityMajor:"", MinCompatibilityMinor:"", GitVersion:"v1.34.0", GitCommit:"f28b4c9efbca5c5c0af716d9f2d5702667ee8a45", GitTreeState:"clean", BuildDate:"2025-08-27T10:15:59Z", GoVersion:"go1.24.6", Compiler:"gc", Platform:"linux/amd64"}
+
+## Localizar que versiones de kubeadm se pueden instalar:
+kubeadm upgrade plan
+kubeadm upgrade plan | grep v
+
+## Para actualizar la versión del nodo ["controlplane"] debemos detenerlo:
+kubectl drain controlplane --ignore-daemonsets ; kubectl drain node01 --ignore-daemonsets
+node/controlplane cordoned
+Warning: ignoring DaemonSet-managed Pods: kube-flannel/kube-flannel-ds-mlqhr, kube-system/kube-proxy-rm9tp
+evicting pod kube-system/coredns-6678bcd974-stgmp
+evicting pod default/blue-759779556-clrhz
+evicting pod kube-system/coredns-6678bcd974-89zdg
+evicting pod default/blue-759779556-gtg7q
+pod/blue-759779556-gtg7q evicted
+pod/blue-759779556-clrhz evicted
+pod/coredns-6678bcd974-89zdg evicted
+pod/coredns-6678bcd974-stgmp evicted
+node/controlplane drained
+
+## Agregamos en la ruta ["/etc/apt/source.list.d/kubernetes.list"] el código de la fuente de actualización:
+# deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /
+deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /
+
+## Actualizamos el sistema completo:
+apt update ; apt full-upgrade ; apt-cache madison kubeadm
+
+## Instalamos la nueva versión de kubeadm:
+apt-get install kubeadm=1.35.0-1.1
+
+## Actualizamos el cluster de kubernetes. Si pregunta sobre si quieres continuar, escribe 'Y+Enter_key':
+kubeadm upgrade plan v1.35.0 ; kubeadm upgrade apply v1.35.0
+
+## Reinicia los procesos y servicios del kubelet:
+systemctl daemon-reload ; systemctl restart kubelet
+
+## Estado de los nodos después de actualizar:
+kubectl get nodes -o wide 
+NAME           STATUS                     ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+controlplane   Ready,SchedulingDisabled   control-plane   60m   v1.35.6   10.244.127.208   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
+node01         Ready,SchedulingDisabled   <none>          60m   v1.34.0   10.244.56.39     <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
+
+## Reactivar los nodos en reposo:
+kubectl uncordon controlplane ; kubectl uncordon node01 
+node/controlplane uncordoned
+node/node01 uncordoned
+
+## Volvemos a realizar otro mantenimiento a los nodos:
+kubectl drain controlplane --ignore-daemonsets ; kubectl drain node01 --ignore-daemonsets
+
+## ssh node01 y dentro repetir los procesos anteriores
+
+## 56º Los elementos creados en kubernetes se pueden respaldar para ser restaurados a petición de administrador de sistemas. El sistema guarda un una base de datos con los comandos:
+
+## Obtener todos los servicios activos y exportarlos al fichero de respaldo:
+kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml
+
+## Consultar el etcd.service:
+etcd.service
+
+## Crear una copia de seguridad con etcdctl:
+etcdctl snapshot save </path/to-file.db> --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key
+## listar el directorio:
+ls -lh
+
+## Detemos el servicio apiserver de kubernetes:
+systemctl stop kube-apiserver
+
+## Restaurar una instantanea del servicio respaldado. Cuando se usa este comando crea un directorio nuevo para no se solape con otro cluster:
+etcdutl snapshot restore /opt/snapshot-pre-boot.db --data-dir=/var/lib/etcd-from-backup
+
+## Consultar el etcd.service de nuevo:
+etcd.service
+
+## Reiniciamos los procesos y el apiserver vuelve a trabajar:
+systemctl daemon-reload ; systemctl restart etcd ; systemctl start kube-apiserver
+
+## Verificar versión del comando:
+etcdctl version
+
+## Verificar los deploy activos:
+kubectl get deployments -o wide 
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES         SELECTOR
+blue   3/3     3            3           2m    nginx        nginx:alpine   app=blue
+red    2/2     2            2           2m    nginx        nginx:alpine   app=red
+
+## Verificar el etcdctl:
+etcdctl version
+etcdctl version: 3.5.16
+API version: 3.5
+
+## Filtrar la version de imagen de la descripción del pod etcd-controlplane en el ns kube-system
+kubectl describe pod etcd-controlplane  -n kube-system | grep Image:
+    Image:         registry.k8s.io/etcd:3.6.6-0
+
+## Filtrar las URL https de la descripción del pod etcd-controlplane en el ns kube-system y verificar la linea --listen-client-urls
+kubectl describe pod etcd-controlplane  -n kube-system | grep https://
+Annotations:          kubeadm.kubernetes.io/etcd.advertise-client-urls: https://10.244.253.186:2379
+      --advertise-client-urls=https://10.244.253.186:2379
+      --initial-advertise-peer-urls=https://10.244.253.186:2380
+      --initial-cluster=controlplane=https://10.244.253.186:2380
+      --listen-client-urls=https://127.0.0.1:2379,https://10.244.253.186:2379 # --> LOOK AT THIS
+      --listen-peer-urls=https://10.244.253.186:2380
+
+## Filtrar las rutas del servidor de certificados de la descripción del pod etcd-controlplane en el ns kube-system :
+kubectl describe pod etcd-controlplane  -n kube-system | grep /etc/kubernetes
+      --cert-file=/etc/kubernetes/pki/etcd/server.crt --> LOOK AT THIS
+      --key-file=/etc/kubernetes/pki/etcd/server.key
+      --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+      --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+      --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+      --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+      /etc/kubernetes/pki/etcd from etcd-certs (rw)
+    Path:          /etc/kubernetes/pki/etcd
+
+## Filtrar las rutas del CA de certificados de la descripción del pod etcd-controlplane en el ns kube-system :
+kubectl describe pod etcd-controlplane  -n kube-system | grep /etc/kubernetes
+      --cert-file=/etc/kubernetes/pki/etcd/server.crt
+      --key-file=/etc/kubernetes/pki/etcd/server.key
+      --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+      --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+      --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt --> LOOK AT THIS
+      --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+      /etc/kubernetes/pki/etcd from etcd-certs (rw)
+    Path:          /etc/kubernetes/pki/etcd
+
+## Crea una copia de seguridad para el sistema:
+etcdctl snapshot save /opt/snapshot-pre-boot.db --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key
+{"level":"info","ts":"2026-07-12T17:41:05.548222Z","caller":"snapshot/v3_snapshot.go:65","msg":"created temporary db file","path":"/opt/snapshot-pre-boot.db.part"}
+{"level":"info","ts":"2026-07-12T17:41:05.552023Z","logger":"client","caller":"v3@v3.5.16/maintenance.go:212","msg":"opened snapshot stream; downloading"}
+{"level":"info","ts":"2026-07-12T17:41:05.552050Z","caller":"snapshot/v3_snapshot.go:73","msg":"fetching snapshot","endpoint":"https://127.0.0.1:2379"}
+{"level":"info","ts":"2026-07-12T17:41:05.558340Z","logger":"client","caller":"v3@v3.5.16/maintenance.go:220","msg":"completed snapshot read; closing"}
+{"level":"info","ts":"2026-07-12T17:41:05.558397Z","caller":"snapshot/v3_snapshot.go:88","msg":"fetched snapshot","endpoint":"https://127.0.0.1:2379","size":"1.8 MB","took":"now"}
+{"level":"info","ts":"2026-07-12T17:41:05.558450Z","caller":"snapshot/v3_snapshot.go:97","msg":"saved","path":"/opt/snapshot-pre-boot.db"}
+Snapshot saved at /opt/snapshot-pre-boot.db
+
+## Para restaurar y Verificar necesitamos usar etcdutl:
+etcdutl --write-out=table snapshot status snapshot.db
++----------+----------+------------+------------+
+|   HASH   | REVISION | TOTAL KEYS | TOTAL SIZE |
++----------+----------+------------+------------+
+| fe01cf57 |       10 |          7 | 2.1 MB     |
++----------+----------+------------+------------+
+
+## Mover el fichero kube-apiserver.yaml a directorio /tmp/ y esperar 30 seg:
+mv -v /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/ ; sleep 30
+copied '/etc/kubernetes/manifests/kube-apiserver.yaml' -> '/tmp/kube-apiserver.yaml'
+removed '/etc/kubernetes/manifests/kube-apiserver.yaml'
+
+## Restaurar el sistema con el fichero de copia /opt/backup_file.db:
+etcdutl snapshot restore /opt/snapshot-pre-boot.db --data-dir=/var/lib/etcd-from-backup
+2026-07-12T17:56:23Z    info    snapshot/v3_snapshot.go:265     restoring snapshot      {"path": "/opt/snapshot-pre-boot.db", "wal-dir": "/var/lib/etcd-from-backup/member/wal", "data-dir": "/var/lib/etcd-from-backup", "snap-dir": "/var/lib/etcd-from-backup/member/snap", "initial-memory-map-size": 10737418240}
+2026-07-12T17:56:23Z    info    membership/store.go:141 Trimming membership information from the backend...
+2026-07-12T17:56:23Z    info    membership/cluster.go:421       added member    {"cluster-id": "cdf818194e3a8c32", "local-member-id": "0", "added-peer-id": "8e9e05c52164694d", "added-peer-peer-urls": ["http://localhost:2380"]}
+2026-07-12T17:56:23Z    info    snapshot/v3_snapshot.go:293     restored snapshot       {"path": "/opt/snapshot-pre-boot.db", "wal-dir": "/var/lib/etcd-from-backup/member/wal", "data-dir": "/var/lib/etcd-from-backup", "snap-dir": "/var/lib/etcd-from-backup/member/snap", "initial-memory-map-size": 10737418240}
+
+## Editamos el fichero movido. La parte inferior del fichero se le cambia el path:
+nano /etc/kubernetes/manifests/etcd.yaml
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/pki/etcd
+      type: DirectoryOrCreate
+    name: etcd-certs
+  - hostPath:
+      path: /var/lib/etcd-from-backup        # NEW restored directory
+      type: DirectoryOrCreate
+    name: etcd-data
+
+## El fichero debe ser devuelto a su sitio:
+mv -v /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/
+copied '/tmp/kube-apiserver.yaml' -> '/etc/kubernetes/manifests/kube-apiserver.yaml'
+removed '/tmp/kube-apiserver.yaml'
+
+## Reiniciamos el kube-controller-manager, movemos el kube-controller.yaml a /tmp/, esperamos 20 seg, devolverlo a su sitio y repetir con kube-scheduler:
+mv -v /etc/kubernetes/manifests/kube-controller-manager.yaml /tmp/ ; sleep 20 ; mv -v /tmp/kube-controller-manager.yaml /etc/kubernetes/manifests/ ; mv -v /etc/kubernetes/manifests/kube-scheduler.yaml /tmp/ ; sleep 20 ; mv -v /tmp/kube-scheduler.yaml /etc/kubernetes/manifests/ ; systemctl restart kubelet
+
+## Verificar los procesos críticos:
+watch crictl ps
+
+## Verificar todos los recursos de los namespaces:
+kubectl get deployments,services --all-namespaces
+
+## Verifica los pods con todos los ns y los nodos
+kubectl get pods --all-namespaces
+kubectl get nodes -o wide
+
+## 57º
