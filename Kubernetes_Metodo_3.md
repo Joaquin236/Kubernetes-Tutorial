@@ -3812,4 +3812,49 @@ kubectl get deployments,services --all-namespaces
 kubectl get pods --all-namespaces
 kubectl get nodes -o wide
 
-## 57º
+## 57.1º Los servicios de kubernetes deben ser protegidos en caso de que entre el servidor y el cliente hay un atacante de hombre en medio (man in the middle ["Cracker"]), los métodos de protección suele ser a través de cifrar con certificado y claves.
+
+## 57.2º La autenticación determina quíen puede obtener el acceso: ["Static_Token_File","Certificates","External_Auth_Providers-LDAP","Service_Accounts"].
+
+## 57.3º La autorización implementa controles de acceso basados en roles, el usuario se asocia en grupos con permisos restrictivos: ["RBAC_Auth","Node_Auth","ABAC_Auth","Webhook_Mode"]
+
+## 57.4º El certificado TLS se establece para blindar los servicios del kube-apiserver, el kube-proxy, kube-scheduler, kubelet, etcd_cluster and kube_Controller.
+
+## 57.5º La politica de red determina como se conectará los pods a cada cluster y lo que se pueda realizar conectado.
+
+## 57.6º El cluster está atendido por el administrador/operador encargado del despliegue y por el desarrollador que construye la aplicación, evalúa como se desarrollará las actualizaciones de la aplicación y corrige las incidencias de la aplicación. El cliente se conecta para recibir la información obtenida del contenedor que ofrece sus datos, los bots automatizan algunos ajustes de la infraestructura. Los nodos, deploy y pods están conectados y dependen de autorizaciones y autenticaciones para enlazarse.
+
+## 57.7º Los comandos para crear y consultar cuentas son:
+kubectl create serviceaccount sa1
+kubectl get serviceaccount
+
+## 57.8º Cada cuenta de acceso es administrada por el sistema de kubernetes en lugar del sistema operativo. Las peticiones son interpretadas por kubernetes_api-server.
+
+## 57.9º El kube-apiserver se autentica con certificados, el token_file y servicios de cuenta.
+
+## 57.10º El sistema de autenticación guarda un fichero.csv con la información de los usuarios y grupos. La contraseña se guarda con tokens de codificación.
+
+## 57.11º No se recomienda guardar los usuarios, contraseñnas y grupos en ficheros de texto plano que pueden ser interceptados por entidades ajenas al servicio.
+
+## 57.12º El volumen de montaje debe pasar por el kubeadm setup.
+
+## 57.13º Configura una autorización basada en roles para los usuarios nuevos.
+
+## 58.1º Si el cliente entra en una conexión no protegida por cifrado TLS cuando sea interceptado por el Cracker, el craker se llevará los datos en texto plano y tomará el control de la cuenta del cliente, una de las soluciones es; el contenido se cifra con un certificado y clave privada, el servidor recibe la clave pública, si la clave es interceptada el contenido puede ser descrifrado por el cracker.
+
+## 58.2º El cifrado asimétrico SSH es útil cuando no se ofrece el servicio de autenticación por usuario/contraseña, se puede usar a través de los comandos:
+ssh-keygen
+cat ~/.ssh/autorized_keys
+ssh -i id_ras user1@server1
+openssl genrsa -out my-bank.key 1024
+openssl rsa -in my-bank.key -pubout > mybank.pem
+
+## 58.3º Si el atacante aún está interesado en capturar la cuenta del usuario puede recrear la página web con el servicio. Si el usuario no percibe que la página que está usando es una web falsa, continuará con el proceso de iniciar sesión, aunque esté el contenido cifrado, el atacante recibe las claves públicas para descubrir las credenciales y tomar el control de la cuenta, el cliente puede no ser consciente de la situación o cuando lo descubre la cuenta de Crakeada. El navegador también puede evaluar el estado del certificado y si no es seguro, da el aviso de servicio no seguro, cada certificado está firmado por una autoridad certificativa y también las empresas de seguridad informática evaluan los certficidados. Las claves públicas llevan la extenxión: ["*.crt","*.pem"]. Las claves privadas ["*.key","*-key.pem"]. Los certificados llevan ["*.crt"].
+
+## 59.1º El administrador debe establecer una conexión segura entre los componentes del cluster, el servidor interno, el planificador y otros nodos. El servidor lleva su certificado con su clave privada, cada componente del servidor lleva un grupo de certificados y claves.
+
+## 59.2º El cliente también lleva sus certificados y clave privada, establece una conexión segura con el proxy del sistema, el etcd server, kubelet, el controller manager y planificador.
+
+## 59.3º Se puede admitir tener más de una entidad certificadora.
+
+## 
