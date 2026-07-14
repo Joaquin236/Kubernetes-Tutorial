@@ -4019,3 +4019,101 @@ openssl x509 -in /etc/kubernetes/pki/ca.crt -text | grep -A2 Validity
             Not After : Jul 11 14:57:55 2036 GMT
             It's 10 Years
 
+## Verificar si el sistema permite consultar los pods
+kubectl get pods
+Get "https://controlplane:6443/api/v1/namespaces/default/pods?limit=500": net/http: TLS handshake timeout - error from a previous attempt: unexpected EOF
+
+## Listar para localizar el fichero server
+ls -lh /etc/kubernetes/pki/etcd/ | grep server
+-rw-r--r-- 1 root root 1.2K Jul 14 17:53 server.crt
+-rw------- 1 root root 1.7K Jul 14 17:53 server.key
+
+## Verificar la presencia del kube-apiserver
+crictl ps -a | grep kube-apiserver
+76bced9cced6d       5c6acd67e9cd1                       53 seconds ago
+Exited              kube-apiserver                          7
+2a407a582e6bf       kube-apiserver-controlplane            kube-system
+
+## Ver registro del contenedor --> 76bced9cced6d  
+crictl logs 76bced9cced6d
+1 logging.go:55] [core] [Channel #7 SubChannel #9]grpc: addrConn.createTransport failed to connect
+to {Addr: "127.0.0.1:2379", ServerName: "127.0.0.1:2379", BalancerAttributes:
+{"<%!p(pickfirstleaf.managedByPickfirstKeyType={})>":
+"<%!p(bool=true)>" }}. Err: connection error: desc = "transport: Error while dialing: dial tcp 127.0.0.1:2379: connect: connection refused"
+F0714 18:21:10.953387       1 instance.go:233] Error creating leases: error creating storage factory: context deadline exceeded
+
+## Verificar la presencia del etcd
+crictl ps -a | grep etcd
+552128eeccc4f       0a108f7189562       2 minutes ago
+Exited               etcd                      8
+e70f965f17074       etcd-controlplane       kube-system
+
+## Ver registro de contonedor --> 552128eeccc4f
+crictl logs 552128eeccc4f
+E0714 18:35:46.703296   27205 log.go:32] "ContainerStatus from runtime service failed" err="rpc error:
+code = NotFound desc = an error occurred when try to find container \"552128eeccc4f\": not found" containerID="552128eeccc4f"
+FATA[0000] rpc error: code = NotFound desc = an error occurred when try to find container "552128eeccc4f": not found
+
+##
+crictl ps -a | grep kube-api
+4de0ee7f825fa       5c6acd67e9cd1                      About a minute ago
+Running             kube-apiserver                                12
+2a407a582e6bf       kube-apiserver-controlplane            kube-system
+3df7a4899437f       5c6acd67e9cd1                           6 minutes ago
+Exited              kube-apiserver                                11
+2a407a582e6bf       kube-apiserver-controlplane            kube-system
+
+##
+crictl logs 4de0ee7f825fa
+I0714 18:48:26.821948       1 options.go:263] external host was not specified, using 10.244.253.154
+I0714 18:48:26.823667       1 server.go:150] Version: v1.35.0
+I0714 18:48:26.823682       1 server.go:152] "Golang settings" GOGC="" GOMAXPROCS="" GOTRACEBACK=""
+W0714 18:48:26.871908       1 logging.go:55] [core] [Channel #2 SubChannel #4]grpc:
+addrConn.createTransport failed to connect to {Addr: "127.0.0.1:2379", ServerName: "127.0.0.1:2379",
+BalancerAttributes: {"<%!p(pickfirstleaf.managedByPickfirstKeyType={})>": "<%!p(bool=true)>" }}.
+Err: connection error: desc = "transport: Error while dialing: dial tcp 127.0.0.1:2379: operation was canceled"
+
+## El sistema falla porque hay una linea defectuosa en el fichero etcd.yaml
+cat /etc/kubernetes/manifests/etcd.yaml | grep server
+    - --cert-file=/etc/kubernetes/pki/etcd/server-certificate.crt
+    - --key-file=/etc/kubernetes/pki/etcd/server.key
+
+## Renombrar la ruta con el editor nano
+nano /etc/kubernetes/manifests/etcd.yaml
+- --cert-file=/etc/kubernetes/pki/etcd/server-certificate.crt --> server.crt
+
+## Después de correguir el cambio de nombre de certificado ya debe funcionar
+kubectl get pods
+No resources found in default namespace.
+
+## Hay otro fallo y se ha detenido el kubernetes
+kubectl get nodes
+The connection to the server controlplane:6443 was refused - did you specify the right host or port?
+
+## Localizar los contenedores del kube-apiserver
+crictl ps -a | grep kube-apiserver
+96664a8349a25       5c6acd67e9cd1                    2 minutes ago
+Exited              kube-apiserver                        5
+c043c4a9e09c8       kube-apiserver-controlplane      kube-system
+
+## Verificar el registro del contenedor
+crictl logs 96664a8349a25
+I0714 18:59:34.792476       1 options.go:263] external host was not specified, using 10.244.253.154
+I0714 18:59:34.794047       1 server.go:150] Version: v1.35.0
+I0714 18:59:34.794062       1 server.go:152] "Golang settings" GOGC="" GOMAXPROCS="" GOTRACEBACK=""
+W0714 18:59:34.852334       1 logging.go:55] [core] [Channel #2 SubChannel #3]grpc: addrConn.createTransport
+failed to connect to {Addr: "127.0.0.1:2379", ServerName: "127.0.0.1:2379", BalancerAttributes:
+{"<%!p(pickfirstleaf.managedByPickfirstKeyType={})>": "<%!p(bool=true)>" }}.
+Err: connection error: desc = "transport: Error while dialing: dial tcp 127.0.0.1:2379: operation was canceled"
+
+## Hay una linea defectuosa de nuevo en el fichero
+nano /etc/kubernetes/manifests/kube-apiserver.yaml
+- --client-ca-file=/etc/kubernetes/pki/ca.crt
+
+## Renombramos la ruta del fichero
+nano /etc/kubernetes/manifests/kube-apiserver.yaml
+- --client-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+
+## Después de correguir el cambio de nombre de certificado ya debe funcionar
+kubectl get pods
+No resources found in default namespace.
