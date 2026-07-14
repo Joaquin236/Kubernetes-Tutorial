@@ -3967,3 +3967,13 @@ cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep apiserver.crt
 cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep client
     - --client-ca-file=/etc/kubernetes/pki/ca.crt
     - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
+
+## Localizar la clave apiserver-kubelet-client.key del fichero kube-apiserver.yaml
+cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep kubelet
+    - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+    - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+
+## Localizar el certificado server.crt del fichero etcd.yaml
+cat /etc/kubernetes/manifests/etcd.yaml | grep server
+    - --cert-file=/etc/kubernetes/pki/etcd/server.crt
+    - --key-file=/etc/kubernetes/pki/etcd/server.key
