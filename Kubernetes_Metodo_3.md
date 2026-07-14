@@ -3881,7 +3881,7 @@ users:
 
 ## 60.4º El etcd_server es desplegado como un cluster desde múltiples servidores y entorno de alta disponibilidad. Necesita crear certificados adicionales. Con el comando 'cat /etc/kubernetes/manifest/etcd.yaml' 
 mostramos los valores de los parámetros del sistema,
-entre ellos hay valores para los certificados.
+entre ellos hay valores para los certificados. Los clientes también necesita disponer de cerificados válidos para el acceso. Los nodos deben estar autenticados y certificados durante la conexión.
 
 ## 60.5º El apiserver de kubernetes se puede declarar el certificado con un fihcero openssl.cnf
 nano openssl.cnf
