@@ -3958,3 +3958,12 @@ kubectl logs
 # necesitamos usar los comandos de docker:
 crictl ps -a
 crictl logs <"Container_name">
+
+## Localizar el certificado apiserver.crt del fichero kube-apiserver.yaml
+cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep apiserver.crt
+    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+
+## Localizar el certificado apiserver-etcd-client.crt
+cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep client
+    - --client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
