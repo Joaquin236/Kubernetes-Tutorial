@@ -3862,10 +3862,41 @@ openssl genrsa -out ca.key 2048 # --> Generar la clave
 openssl req -new -key ca.key -sub "/CN=KUBERNETES-CA" -out ca.csr # --> Firmar el certificado de respuesta
 openssl x509 -req -in ca.csr -signkey ca.key -out ca.crt # --> Firmar el certificado
 
-## 60.2º El usuario admin tiene que realizar el proceso de generar la clave,
-# después generará la firma de certificado de respuesta y el certificado final
-# Esta forma de identificarse es más segura que los usuarios y contraseñas.
-# Cada componente lleva el suyo con el formato system_user:kubernetes_component_server.
-# Si realizamos 'curl htts://kube-apiserver:6443/api/v1 --key admin.key --cert admin.crt --cacert ca.crt
-# La consola debe mostrar el fichero JSON del pod en ejecución.
+## 60.2º El usuario admin tiene que realizar el proceso de generar la clave, después generará la firma de certificado de respuesta y el certificado final. Esta forma de identificarse es más segura que los usuarios y contraseñas. Cada componente lleva el suyo con el formato system_user:kubernetes_component_server. Si realizamos 'curl htts://kube-apiserver:6443/api/v1 --key admin.key --cert admin.crt --cacert ca.crt. La consola debe mostrar el fichero JSON del pod en ejecución.
+
+## 60.3º Otra forma de realizar esta acción es creando un fichero yaml donde guardar los parámetros del certificado.
+nano kube-config.yaml
+apiVersion: v1  
+clusters:
+- cluster:
+    certificate-autority: ca.crt
+    server: https://kube-apiserver:6443
+  name: kubernetes
+kind: Config
+users:
+- name: kubernetes-admin
+  user:
+    client_certificate: admin.crt
+    client_key: admin.key
+
+## 60.4º El etcd_server es desplegado como un cluster desde múltiples servidores y entorno de alta disponibilidad. Necesita crear certificados adicionales. Con el comando 'cat /etc/kubernetes/manifest/etcd.yaml' 
+mostramos los valores de los parámetros del sistema,
+entre ellos hay valores para los certificados.
+
+## 60.5º El apiserver de kubernetes se puede declarar el certificado con un fihcero openssl.cnf
+nano openssl.cnf
+[req]
+req_extensions=v3_req
+distinguished_name=req_distinguished_name
+[v3_req]
+basicConstrains=CA:FALSE
+keyUsage=nonRepudiation,
+subjectAltName=@alt_names
+[alt_names]
+DNS.1=kubernetes
+DNS.2=kubernetes.default
+DNS.3=kubernetes.default.svc
+DNS.4=kubernetes.default.svc.cluster.local
+IP.1=10.96.0.1
+IP.2=172.17.0.87
 
