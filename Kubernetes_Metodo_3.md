@@ -3857,4 +3857,15 @@ openssl rsa -in my-bank.key -pubout > mybank.pem
 
 ## 59.3º Se puede admitir tener más de una entidad certificadora.
 
-## 
+## 60.1º Para crear el TSL para usarlo en kubernetes necesitamos el comando:
+openssl genrsa -out ca.key 2048 # --> Generar la clave
+openssl req -new -key ca.key -sub "/CN=KUBERNETES-CA" -out ca.csr # --> Firmar el certificado de respuesta
+openssl x509 -req -in ca.csr -signkey ca.key -out ca.crt # --> Firmar el certificado
+
+## 60.2º El usuario admin tiene que realizar el proceso de generar la clave,
+# después generará la firma de certificado de respuesta y el certificado final
+# Esta forma de identificarse es más segura que los usuarios y contraseñas.
+# Cada componente lleva el suyo con el formato system_user:kubernetes_component_server.
+# Si realizamos 'curl htts://kube-apiserver:6443/api/v1 --key admin.key --cert admin.crt --cacert ca.crt
+# La consola debe mostrar el fichero JSON del pod en ejecución.
+
