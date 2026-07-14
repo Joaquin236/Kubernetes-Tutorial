@@ -3900,3 +3900,50 @@ DNS.4=kubernetes.default.svc.cluster.local
 IP.1=10.96.0.1
 IP.2=172.17.0.87
 
+## 60.6º El fichero kubelet-config.yaml contiene las rutas de los cetificados:
+nano kubelet-config.yaml
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+authentication:
+  x509:
+    clientCAFile: "/var/lib/kubernetes/ca.pem"
+authorization:
+  mode: Webhook
+clusterDomain: "cluster.local"
+clusterDNS:
+  - "10.32.0.10"
+podCIDR: "${POD_CIDR}"
+resolvConf: "/run/systemd/resolve/resolv.conf"
+runtimeRequestTimeout: "15m"
+tlsCertFile: "/var/lib/kubelet/kubelet-node01.crt"
+tlsPrivateKeyFile: "/var/lib/kubelet/kubelet-node01.key"
+
+## 61.1º Cuando entramos en un nuevo equipo de desarrollo de kubernetes
+# empezamos como administrador del cluster a trabajar.
+# Si tuviesemos que desplegar un servicio completo desde cero,
+# necesitamos realizar los pasos para crear los certificados y 
+# autorizaciones de los grupo para cada usuario.
+# Verificar los ficheros:
+cat /etc/kubernetes/manifest/kube-apiserver.service
+cat /etc/kubernetes/manifest/kube-apiserver.yaml
+cat /etc/kubernetes/pki/apiserver.crt
+
+
+## 61.2º Con el comando ssl y el fichero /etc/kubernetes/pki/apiserver.crt
+# obtenemos más información sobre el certificado apiserver.crt:
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
+# Después debe aparecer un yaml con datos del apiserver
+
+## 61.3º Tabla de la estrucitura de los certificados de kubernetes:
++--------------------------------------------------+-------------------------------+---------------+----------------+------------+
+| Rutas de certificado                             | Nombre del CN                 | Nombre del ALT| Organización   | Issuer     |
+| /etc/kubernetes/pki/apiserver.crt                | kube-apiserver                | DNS & IP      |                | kubernetes |
+| /etc/kubernetes/pki/apiserver.key                |                               |               |                |            |
+| /etc/kubernetes/pki/ca.crt                       | kubernetes                    |               |                | kubernetes |
+| /etc/kubernetes/pki/apiserver-kubelet-client.crt | kube-apiserver-kubelet-client |               | system:masters | kubernetes |
+| /etc/kubernetes/pki/apiserver-kubelet-client.key |                               |               |                |            |
+| /etc/kubernetes/pki/apiserver-etcd-client.crt    | kube-apiserver-kubelet-client |               | system:masters | self       |
+| /etc/kubernetes/pki/apiserver-etcd-client.key    |                               |               |                |            |
+| /etc/kubernetes/pki/etcd/ca.crt                  | kubernetes                    |               |                | kubernetes |
++--------------------------------------------------+-------------------------------+---------------+----------------+------------+
+
