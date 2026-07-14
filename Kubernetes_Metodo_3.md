@@ -3947,3 +3947,14 @@ openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
 | /etc/kubernetes/pki/etcd/ca.crt                  | kubernetes                    |               |                | kubernetes |
 +--------------------------------------------------+-------------------------------+---------------+----------------+------------+
 
+# 61.4º Kubernetes registra eventos de los procesos y fallos detectados,
+# en estos eventos se encuentran las versiones del sistema, direcciones IP, 
+# el acceso a los certificados, las autorizaciones y la autenticación. 
+# Los comandos son:
+journalctl -u etcd.service -l
+kubectl logs etcd-master
+kubectl logs
+# Si el sistema kubernetes se desconecta y necesitamos el panel de eventos, 
+# necesitamos usar los comandos de docker:
+crictl ps -a
+crictl logs <"Container_name">
