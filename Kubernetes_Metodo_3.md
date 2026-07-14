@@ -3977,3 +3977,31 @@ cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep kubelet
 cat /etc/kubernetes/manifests/etcd.yaml | grep server
     - --cert-file=/etc/kubernetes/pki/etcd/server.crt
     - --key-file=/etc/kubernetes/pki/etcd/server.key
+
+## Localizar el fichero ca.crt de la ruta /etc/kubernetes/manifests/etcd.yaml
+cat /etc/kubernetes/manifests/etcd.yaml | grep ca  
+    - --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+    - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+
+## Localizar la linea Subject del fichero apiserver.crt usando openssl
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep CN
+        Issuer: CN = kubernetes
+        Subject: CN = kube-apiserver --> It's the answer
+
+## Localizar la linea Issuer del fichero apiserver.crt usando openssl
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep CN
+        Issuer: CN = kubernetes --> It's the answer
+        Subject: CN = kube-apiserver
+
+## ¿Que DNS falta en el fichero apiserver.crt? --> Falta el kube-master, que no está configurado
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep -A3 Alternative
+            X509v3 Subject Alternative Name:
+                DNS:controlplane, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc,
+                DNS:kubernetes.default.svc.cluster.local,
+                IP Address:172.20.0.1, IP Address:10.244.56.61  
+                Signature Algorithm: sha256WithRSAEncryption  
+
+## Localizar el controlplane del fichero server.crt usando openssl
+openssl x509 -in /etc/kubernetes/pki/etcd/server.crt -text -noout | grep control
+        Subject: CN = controlplane
+                DNS:controlplane, DNS:localhost, IP Address:10.244.56.61, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
