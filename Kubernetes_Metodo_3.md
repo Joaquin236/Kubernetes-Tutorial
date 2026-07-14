@@ -4005,3 +4005,17 @@ openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep -A3 Alter
 openssl x509 -in /etc/kubernetes/pki/etcd/server.crt -text -noout | grep control
         Subject: CN = controlplane
                 DNS:controlplane, DNS:localhost, IP Address:10.244.56.61, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
+
+## Verificar la caducidad del fichero apiserver.crt usando openssl
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text | grep -A2 Validity
+        Validity
+            Not Before: Jul 14 14:52:55 2026 GMT
+            Not After : Jul 14 14:57:55 2027 GMT
+            It's 1 Year
+## Verificar la caducidad del fichero ca.crt usando openssl
+openssl x509 -in /etc/kubernetes/pki/ca.crt -text | grep -A2 Validity
+        Validity
+            Not Before: Jul 14 14:52:55 2026 GMT
+            Not After : Jul 11 14:57:55 2036 GMT
+            It's 10 Years
+
