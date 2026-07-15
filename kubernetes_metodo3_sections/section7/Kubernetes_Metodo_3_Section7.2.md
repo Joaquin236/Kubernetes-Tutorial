@@ -48,7 +48,6 @@ Después recolecta el fichero csr y convierte su contenido en base64
 cat user.csr | base 64
 ["BASE64_CODE"]
 
-
 ## 62.7º
 Creamos un fichero yaml que lleve el código en su interior
 apiVersion: certificates.k8s.io/v1
@@ -69,3 +68,27 @@ spec:
     reason: KubectlAprove
     message: "Commentary"
     lastUpdateTime: "2021-08-13T20:30:00Z"
+
+## 62.8º 
+kubectl get csr 
+Name            AGE     Condition
+["name"]        12s     Pending
+
+## 62.9º
+kubectl certificate approve ["name"]
+
+## 62.10º
+kubectl get csr ["name"] -o yaml
+
+## 62.11º
+kubectl get csr ["name"] -o yaml | grep -A7 certificate | base64 --decode
+
+## 62.12º
+El Controller-manager es el encargado de realizar las tareas de administrar
+los certificados, dentro hay módulos que se encargan de los procesos como
+csr-approving & csr-signing
+
+## 62.13º
+cat /etc/kubernetes/kube-controller-manager.yaml
+-cluster-signing-cert-file=/etc/kubernetes/pky/ca.crt
+-cluster-signing-key-file=/etc/kubernetes/pky/ca.key 
