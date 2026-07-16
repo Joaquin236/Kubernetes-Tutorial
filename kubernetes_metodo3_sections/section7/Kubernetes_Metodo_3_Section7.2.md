@@ -92,3 +92,53 @@ csr-approving & csr-signing
 cat /etc/kubernetes/kube-controller-manager.yaml
 -cluster-signing-cert-file=/etc/kubernetes/pky/ca.crt
 -cluster-signing-key-file=/etc/kubernetes/pky/ca.key 
+
+##
+cat akshay.csr | base64 -w 0
+
+##
+---
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: akshay
+spec:
+  groups:
+  - system:authenticated
+  request: <Paste the base64 encoded value of the CSR file>
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+  - client auth
+
+##
+kubectl apply -f akshay_yaml_file.yaml 
+certificatesigningrequest.certificates.k8s.io/akshay created
+
+##
+kubectl get csr
+NAME        AGE     SIGNERNAME                                    REQUESTOR                  REQUESTEDDURATION   CONDITION
+akshay      2m42s   kubernetes.io/kube-apiserver-client           kubernetes-admin           <none>              Pending
+csr-jdl7z   27m     kubernetes.io/kube-apiserver-client-kubelet   system:node:controlplane   <none>              Approved,Issued
+
+##
+kubectl certificate approve akshay
+certificatesigningrequest.certificates.k8s.io/akshay approved
+
+##
+kubectl get csr | grep agent*
+agent-smith   86s     kubernetes.io/kube-apiserver-client           agent-x                    <none>              Pending
+
+##
+kubectl get csr agent-smith -o yaml | grep system
+  - system:masters
+  - system:authenticated
+
+##
+kubectl certificate deny agent-smith
+certificatesigningrequest.certificates.k8s.io/agent-smith denied
+
+##
+kubectl delete csr agent-smith 
+certificatesigningrequest.certificates.k8s.io "agent-smith" deleted
+
+##
