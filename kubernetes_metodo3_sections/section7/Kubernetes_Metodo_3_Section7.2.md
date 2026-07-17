@@ -93,8 +93,8 @@ certificatesigningrequest.certificates.k8s.io/akshay created
 ## Consultar el estado del certificado:
 kubectl get csr
 NAME        AGE     SIGNERNAME                                    REQUESTOR                  REQUESTEDDURATION   CONDITION
-akshay      2m42s   kubernetes.io/kube-apiserver-client           kubernetes-admin           <none>              Pending
-csr-jdl7z   27m     kubernetes.io/kube-apiserver-client-kubelet   system:node:controlplane   <none>              Approved,Issued
+akshay      2m42s   kubernetes.io/kube-apiserver-client           kubernetes-admin           ["none"]              Pending
+csr-jdl7z   27m     kubernetes.io/kube-apiserver-client-kubelet   system:node:controlplane   ["none"]              Approved,Issued
 
 ## Aprobar manualmente el certificado:
 kubectl certificate approve akshay
@@ -102,7 +102,7 @@ certificatesigningrequest.certificates.k8s.io/akshay approved
 
 ## Localizar un csr específico:
 kubectl get csr | grep agent*
-agent-smith   86s     kubernetes.io/kube-apiserver-client           agent-x                    <none>              Pending
+agent-smith   86s     kubernetes.io/kube-apiserver-client           agent-x                    ["none"]              Pending
 
 ## Localizar el origen de un csr específico:
 kubectl get csr agent-smith -o yaml | grep system
