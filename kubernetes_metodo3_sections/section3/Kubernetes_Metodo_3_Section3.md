@@ -89,9 +89,10 @@ blue   3/3     3            3           81s   nginx        nginx    app=nginx
 
 ## Estado de nodos
 kubectl get nodes -o wide 
-NAME           STATUS   ROLES           AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
-controlplane   Ready    control-plane   17m   v1.35.0   10.244.56.22    ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
-node01         Ready    ["none"]          17m   v1.35.0   10.244.34.242   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+|NAME          | STATUS  | ROLES         |  AGE  | VERSION  | INTERNAL-IP     | EXTERNAL-IP |    OS-IMAGE          | KERNEL-VERSION    | CONTAINER-RUNTIME     |
+|--------------|---------|---------------|-------|----------|-----------------|-------------|----------------------|-------------------|-----------------------|
+|controlplane  | Ready   | control-plane |  17m  | v1.35.0  | 10.244.56.22    |   ["none"]  |   Ubuntu 22.04.5 LTS |  6.8.0-90-generic |  containerd://1.7.22  |
+|node01        | Ready   | ["none"]      |    17m| v1.35.0  | 10.244.34.242   |   ["none"]  |   Ubuntu 22.04.5 LTS |  6.8.0-90-generic |   containerd://1.7.22 |
 
 ## Estado de pods
 kubectl get pods -o wide 
@@ -168,17 +169,19 @@ spec:
 ## El sistema se asegura que no se vaya a superar el límite para proteger el hardawre, kernel y peticiones. Si los llega a superar, el sistema le retira los recursos y se detiene el pod, después se genera un registro con el mensaje de error por parada inesperada
 
 ## En los valores predefinidos, el pod puede usar todo lo que necesite, incluso es capaz de estrangular/asfixiar el Procesador & Memoria si no se controla el acceso a los recursos y afectando a otros pods del nodo
-                                       | BEST_OPTION
-NO REQUESTS  | NO REQUESTS |  REQUESTS |    REQUESTS
+|                                      |            |
+|                                      | BEST_OPTION|
+NO REQUESTS  | NO REQUESTS |  REQUESTS |    REQUESTS|
 NO LIMITS    |    LIMITS   |  LIMITS   | NO LIMITS
+|------------|-------------|-----------|------------|
  ##  | #     |     |       |     |     | #    | #
  #   | #     |     |       |     |     | #    | #
  #   | #     |3vCPU| 3Gi   |3vCPU| 3Gi | #    | #
  #   | #     | # # | # #   | #   | #   | # #  | # #
  # # | # #   | # # | # #   |1vCPU| 1Gi |1vCPU | 1Gi
- 1 2 | 1 2   | 1 2 | 1 2   | 1 2 | 1 2 | 1 2  | 1 2 
- CPU | RAM   | CPU | RAM   | CPU | RAM | CPU  | RAM
-              REQUESTS=LIMITS
+| 1 2 | 1 2   | 1 2 | 1 2   | 1 2 | 1 2 | 1 2  | 1 2 
+| CPU | RAM   | CPU | RAM   | CPU | RAM | CPU  | RAM
+|             REQUESTS=LIMITS                       |
 ## Los pods cuando compiten entre sí y no se raciona bien el acceso es capaz de detener a otros pods por falta de recursos. Cuando es la memoria el recurso al borde de colapsar, el pod que gaste más debe ser detenido para liberar los recursos de RAM.
 
 ## fichero yaml para limitar el rango de cpu:
@@ -306,7 +309,7 @@ kubectl create -f daemonset-definition.yaml
 kubectl get daemonsets
 
 ## Para verificar la estructura usaremos:
-kubectl describe daemonset <daemonset_name>
+kubectl describe daemonset ["daemonset_name"]
 
 ## Mostrar todos los daemos activos
 kubectl get daemonsets.apps --all-namespaces 
@@ -561,15 +564,16 @@ system-node-critical      2000001000   false            16m   PreemptLowerPriori
 
 ## Obtener las prioridades del prioritylevelconfigurations.flowcontrol.apiserver.k8s.io
 kubectl get prioritylevelconfigurations.flowcontrol.apiserver.k8s.io 
-NAME              TYPE      NOMINALCONCURRENCYSHARES   QUEUES   HANDSIZE   QUEUELENGTHLIMIT   AGE
-catch-all         Limited   5                          ["none"]   ["none"]     ["none"]             17m
-exempt            Exempt    ["none"]                     ["none"]   ["none"]     ["none"]             17m
-global-default    Limited   20                         128      6          50                 17m
-leader-election   Limited   10                         16       4          50                 17m
-node-high         Limited   40                         64       6          50                 17m
-system            Limited   30                         64       6          50                 17m
-workload-high     Limited   40                         128      6          50                 17m
-workload-low      Limited   100                        128      6          50                 17m
+|NAME            |  TYPE     |  NOMINALCONCURRENCYSHARES |  QUEUES      | HANDSIZE      | QUEUELENGTHLIMIT |  AGE |
+|----------------|-----------|---------------------------|--------------|---------------|------------------|------|
+|catch-all       |  Limited  |             5             |   ["none"]   |  ["none"]     |     ["none"]     |  17m |   
+|exempt          |  Exempt   |             ["none"]      |   ["none"]   |  ["none"]     |     ["none"]     |  17m |     
+|global-default  |  Limited  |             20            |     128      |     6         |       50         |  17m |
+|leader-election |  Limited  |             10            |     16       |     4         |       50         |  17m |
+|node-high       |  Limited  |             40            |     64       |     6         |       50         |  17m |
+|system          |  Limited  |             30            |     64       |     6         |       50         |  17m |
+|workload-high   |  Limited  |             40            |     128      |     6         |       50         |  17m |
+|workload-low    |  Limited  |            100            |     128      |     6         |       50         |  17m |
 
 ## Obtener el yaml de la prioridad de system-node-critical
 kubectl get priorityclasses system-node-critical -o yaml

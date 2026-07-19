@@ -504,9 +504,10 @@ horizontalpodautoscaler.autoscaling/nginx-deployment created
 
 ## El fichero de despliegue tiene un bug, corrige el bug y vuelve a desplegarlo, verifica si está bien con este comando:
 kubectl get hpa --watch
-NAME               REFERENCE                     TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
-nginx-deployment   Deployment/nginx-deployment   cpu: 0%/80%   1         3         3          7m28s
-nginx-deployment   Deployment/nginx-deployment   cpu: 0%/80%   1         3         1          7m30s
+|NAME              | REFERENCE                   |  TARGETS     |  MINPODS |  MAXPODS  | REPLICAS |  AGE   |
+|------------------|-----------------------------|--------------|----------|-----------|----------|--------|
+|nginx-deployment  | Deployment/nginx-deployment |  cpu: 0%/80% |  1       |  3        | 3        |  7m28s |
+|nginx-deployment  | Deployment/nginx-deployment |  cpu: 0%/80% |  1       |  3        | 1        |  7m30s |
 
 ## 52.1º Redimensiar los pods permiten modificarlos y estar operativos, por defecto la mejor forma de actualizar un pod es borrando y crearlo otra vez, esto perjudica a los que están conectados al servicio del pod. Se estima que estará activada por defecto en alguna versión futura del sistema kubernetes. Necesitamos activar la función FEATURE_GATES=InPlacePodVerticalScaling=true
 
@@ -860,7 +861,7 @@ kubectl cordon node-1
 kubectl get nodes -o wide 
 NAME           STATUS   ROLES           AGE     VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
 controlplane   Ready    control-plane   5m28s   v1.35.0   10.244.170.133   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
-node01         Ready    ["none"]          4m56s   v1.35.0   10.244.147.128   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+node01         Ready    ["none"]        4m56s   v1.35.0   10.244.147.128   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
 
 ## Obtener los deploys activos:
 kubectl get deployments -o wide 
@@ -889,7 +890,7 @@ node/node01 already cordoned
 kubectl get nodes -o wide 
 NAME           STATUS                     ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
 controlplane   Ready                      control-plane   13m   v1.35.0   10.244.170.133   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
-node01         Ready,SchedulingDisabled   ["none"]          12m   v1.35.0   10.244.147.128   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+node01         Ready,SchedulingDisabled   ["none"]        12m   v1.35.0   10.244.147.128   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
 
 ## Después del mantenimiento vuelve a activarlo:
 kubectl uncordon node01 
@@ -899,7 +900,7 @@ node/node01 uncordoned
 kubectl get nodes -o wide 
 NAME           STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
 controlplane   Ready    control-plane   15m   v1.35.0   10.244.170.133   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
-node01         Ready    ["none"]          14m   v1.35.0   10.244.147.128   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+node01         Ready    ["none"]        14m   v1.35.0   10.244.147.128   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
 ##
 kubectl get pods -o wide 
 NAME                    READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
@@ -944,7 +945,7 @@ hr-app-759cb554bf-sqt2z   1/1     Running   0          4m10s   172.17.1.5   node
 kubectl get nodes -o wide
 NAME           STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
 controlplane   Ready    control-plane   25m   v1.34.0   10.244.127.208   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
-node01         Ready    ["none"]          24m   v1.34.0   10.244.56.39     ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
+node01         Ready    ["none"]        24m   v1.34.0   10.244.56.39     ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
 
 ## Localiza los taints en los dos nodos a través de la descripción:
 kubectl describe nodes node01 | grep -i taint
@@ -1000,7 +1001,7 @@ systemctl daemon-reload ; systemctl restart kubelet
 kubectl get nodes -o wide 
 NAME           STATUS                     ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
 controlplane   Ready,SchedulingDisabled   control-plane   60m   v1.35.6   10.244.127.208   ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
-node01         Ready,SchedulingDisabled   ["none"]          60m   v1.34.0   10.244.56.39     ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
+node01         Ready,SchedulingDisabled   ["none"]        60m   v1.34.0   10.244.56.39     ["none"]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.6.26
 
 ## Reactivar los nodos en reposo:
 kubectl uncordon controlplane ; kubectl uncordon node01 
@@ -1021,7 +1022,7 @@ kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml
 etcd.service
 
 ## Crear una copia de seguridad con etcdctl:
-etcdctl snapshot save </path/to-file.db> --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key
+etcdctl snapshot save ["/path/to-file.db"] --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key
 ## listar el directorio:
 ls -lh
 
@@ -1098,11 +1099,9 @@ Snapshot saved at /opt/snapshot-pre-boot.db
 
 ## Para restaurar y Verificar necesitamos usar etcdutl:
 etcdutl --write-out=table snapshot status snapshot.db
-+----------+----------+------------+------------+
 |   HASH   | REVISION | TOTAL KEYS | TOTAL SIZE |
-+----------+----------+------------+------------+
+|----------|----------|------------|------------|
 | fe01cf57 |       10 |          7 | 2.1 MB     |
-+----------+----------+------------+------------+
 
 ## Mover el fichero kube-apiserver.yaml a directorio /tmp/ y esperar 30 seg:
 mv -v /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/ ; sleep 30

@@ -3,9 +3,10 @@ kubectl edit pod test
 
 # 9º A través del parámetro -o wide que ofrece el visor de pods, ofrece más información.
 kubectl get pods -o wide
-NAME    READY   STATUS    RESTARTS   AGE    IP           NODE       NOMINATED NODE   READINESS GATES
-test    1/1     Running   0          108m   10.244.0.8   minikube   ["none"]           ["none"]
-test2   1/1     Running   0          101m   10.244.0.9   minikube   ["none"]           ["none"]
+|NAME   | READY  | STATUS   | RESTARTS |  AGE   | IP         |  NODE     |  NOMINATED NODE  | READINESS GATES |
+|-------|--------|----------|----------|--------|------------|-----------|------------------|-----------------|
+|test   | 1/1    | Running  | 0        |  108m  | 10.244.0.8 |  minikube |  ["none"]        |   ["none"]      |
+|test2  | 1/1    | Running  | 0        |  101m  | 10.244.0.9 |  minikube |  ["none"]        |   ["none"]      |
 
 kubectl get pods test -o yaml # --> ofrece descipciones con formato yaml
 kubectl describe pod test # --> ofrece descipciones con formato amigable
@@ -820,7 +821,7 @@ auth          1/1     Running   0          2m
 db-2-ln6cd    1/1     Running   0          2m
 
 ## 29º Para filtrar el acceso de los pods al nodo establecemos el filtro taint:
-kubectl tain nodes <node_name> key=value:taint-effect
+kubectl tain nodes ["node_name"] key=value:taint-effect
 ## el taint-effect evaluará si el pod tolera el filtro
 ## 1º Filtro --> NoSchedule: el pod no recibe el shedule cuando vaya a crearse
 ## 2º Filtro --> PreferNoSchedule: el pod no tiene garantizado que se le aplique el NoSchedule
@@ -848,7 +849,7 @@ spec:
     effect: NoSchedule*4
 
 ## Para mostrar si el taint está activo le pasamos el grep Taints
-kubectl describe node <name_of_node> | grep Taint
+kubectl describe node ["node_name"] | grep Taint
 
 ## Muestra completa de fichero_taint completo:
 cat bee_pod.yaml 
@@ -879,13 +880,13 @@ node/controlplane untainted
 ## 30º El tamaño del cluster se puede modificar dentro del fichero de construir_Pods.yaml
 
 ## Comando para asignar a los nodos el tamaño solicitado por el pod
-kubectl label nodes <node_name> <label-key>=<label_value>
+kubectl label nodes ["node_name"] ["label-key"]=["label_value"]
 kubectl label nodes node-1 size=Large
 
 ## nano fichero_pod_size.yaml
 apiVersion: v1
 kind: Pod
-metada:
+metadata:
  name: myapp-pod
 spec:
   containers:

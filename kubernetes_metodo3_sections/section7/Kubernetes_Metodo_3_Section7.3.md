@@ -55,8 +55,8 @@ users:
 cat /etc/kubernetes/pki/admin.crt | base64 -o w # --> mostrar en consola el valor con base64
 
 Dentro del fichero debe tener estas lineas y sus valores:
-certificate-authority: <El código debe depositarse en una sola linea>
-client-certificate: <El código debe depositarse en una sola linea>
+certificate-authority: ["El_código_debe_depositarse_en_una_sola_linea"]
+client-certificate: ["El_código_debe_depositarse_en_una_sola_linea"]
 
 Si recolectamos el código y usamos base64 --decode
 cat /etc/kubernetes/pki/admin.crt | base64 -o w | base64 --decode # --> debe mostrar el valor integro del fichero

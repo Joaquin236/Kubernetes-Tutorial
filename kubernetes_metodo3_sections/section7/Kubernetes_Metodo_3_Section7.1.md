@@ -121,8 +121,9 @@ openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
 # Después debe aparecer un yaml con datos del apiserver
 
 ## 61.3º Tabla de la estrucitura de los certificados de kubernetes:
-+--------------------------------------------------+-------------------------------+---------------+----------------+------------+
+
 | Rutas de certificado                             | Nombre del CN                 | Nombre del ALT| Organización   | Issuer     |
+|--------------------------------------------------|-------------------------------|---------------|----------------|------------|
 | /etc/kubernetes/pki/apiserver.crt                | kube-apiserver                | DNS & IP      |                | kubernetes |
 | /etc/kubernetes/pki/apiserver.key                |                               |               |                |            |
 | /etc/kubernetes/pki/ca.crt                       | kubernetes                    |               |                | kubernetes |
@@ -131,7 +132,7 @@ openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
 | /etc/kubernetes/pki/apiserver-etcd-client.crt    | kube-apiserver-kubelet-client |               | system:masters | self       |
 | /etc/kubernetes/pki/apiserver-etcd-client.key    |                               |               |                |            |
 | /etc/kubernetes/pki/etcd/ca.crt                  | kubernetes                    |               |                | kubernetes |
-+--------------------------------------------------+-------------------------------+---------------+----------------+------------+
+
 
 # 61.4º Kubernetes registra eventos de los procesos y fallos detectados,
 # en estos eventos se encuentran las versiones del sistema, direcciones IP, 

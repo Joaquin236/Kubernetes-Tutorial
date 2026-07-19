@@ -14,14 +14,14 @@
 nano user-cr.yaml
 apiVersion: certificates.k8s.io/v1
 kind: CertificateSigningRequest
-metada:
+metadata:
   name: ["user-csr"]
 spec:
   signerName: Kubernetes.io/kube-apiserver-client
   expirationSeconds: 9999 # --> seconds for expiry
   usages:
   - client auth
-  request: <Base64_ENCODED_CSR>
+  request: ["Base64_ENCODED_CSR"]
 
 ## 62.6º Después recolecta el fichero csr y convierte su contenido en base64:
 cat user.csr | base 64
@@ -31,7 +31,7 @@ cat user.csr | base 64
 nano certificate_file.yaml
 apiVersion: certificates.k8s.io/v1
 kind: CertificateSigningRequest
-metada:
+metadata:
   name: ["user-csr"]
   creationTimestrap: "2021-08-13T20:30:00Z"
   uid: 3423f-324a-dfd981-198b
@@ -81,7 +81,7 @@ metadata:
 spec:
   groups:
   - system:authenticated
-  request: <Paste the base64 encoded value of the CSR file>
+  request: ["Paste_the_base64_encoded_value_of_the_CSR_file"]
   signerName: kubernetes.io/kube-apiserver-client
   usages:
   - client auth
