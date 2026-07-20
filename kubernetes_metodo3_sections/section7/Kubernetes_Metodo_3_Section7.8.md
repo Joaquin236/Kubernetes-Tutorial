@@ -66,28 +66,28 @@ curl https://192.168.56.70:6443/api -insecure --header "Authorization: Bearer ["
 -- El token es automático
 -- El token expira automáticamente cuando el pod es borrado
 
-##
+## Consultar las cuentas de servicios activos
 kubectl get serviceaccounts 
 NAME      AGE
 default   8m13s
 dev       29s
 
-##
+## Describir el deploy y localizar la imagen del despliegue
 kubectl describe deployments.apps | grep Image
     Image:      gcr.io/kodekloud/customimage/my-kubernetes-dashboard
 
-##
+## Consultar los pods y localizar el nombre de la cuenta de servicio
 kubectl get pods -o yaml | grep serviceAccountName
     serviceAccountName: default
 
-##
+## Describir el pod web-dashboard y localizar la ruta de montaje
 kubectl describe pod web-dashboard-6b774f6458-x7ccn | grep -A3 Mounts
     Mounts:
       /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-9l2pt (ro)
 Conditions:
   Type                        Status
 
-## 
+## Creamos un fichero yaml con los parámetros de la cuenta de servicio
 nano dashboard-sa_file.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -98,20 +98,20 @@ automountServiceAccountToken: true
 kubectl create -f dashboard-sa_file.yaml 
 serviceaccount/dashboard-sa created
 
-##
+## Creamos el token para la cuenta de servicio
 kubectl create token dashboard-sa > dashboard_sa_token_file.txt
 
-##
+## Editamos el deploy web-dashboard, el parámetro serviceAccountName debe ser corregido
 kubectl edit deployments.apps web-dashboard 
 spec.template.spec.serviceAccountName: dashboard-sa # --> Localizar e insertar el parámetro y el valor necesario
 deployment.apps/web-dashboard edited
 
-##
+## Editamos la cuenta de servicio, el token debe ser de mntaje manual y no automático
 kubectl edit serviceaccounts dashboard-sa
 automountServiceAccountToken: false # --> el servicio de cuenta se creó con el parámetro en ["true"], lo necesitamos con ["false"]
 serviceaccount/dashboard-sa edited
 
-##
+## Editamos el fichero deployment.yaml para adaptarlo a las nuevas necesidades
 nano ~/web-dashboard/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -154,6 +154,6 @@ kubectl apply -f ~/web-dashboard/deployment.yaml
 Warning: resource deployments/web-dashboard is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
 deployment.apps/web-dashboard configured
 
-##
+## Este comando debe localizar si hay un token activo
 kubectl exec $(kubectl get pod -l name=web-dashboard -o jsonpath='{.items[0].metadata.name}') -- ls /var/run/secrets/kubernetes.io/serviceaccount/
 token
