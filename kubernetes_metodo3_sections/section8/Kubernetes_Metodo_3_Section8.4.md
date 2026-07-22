@@ -24,7 +24,7 @@ kubectl get persistentvolume
 ## 80.5º Muestra de fichero yaml para reclamar
 nano pv-definition.yaml
 apiVersion: v1
-kind: PersitenVolmeClaim
+kind: PersistentVolumeClaim
 metadata:
   name: myclain
 spec:
@@ -60,12 +60,12 @@ spec:
         claimName: myclaim
 kubectl create -f pod-definition.yaml
 
-##
+## Consultar los pods activos
 kubectl get pods -o wide 
 NAME     READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
 webapp   1/1     Running   0          17s   172.17.0.4   controlplane   ["none"]           ["none"]
 
-##
+## Consultar los log del pod
 kubectl exec webapp -- cat /log/app.log
 [2026-07-22 16:23:24,496] INFO in event-simulator: USER1 is viewing page2
 [2026-07-22 16:23:25,497] INFO in event-simulator: USER4 logged out
@@ -73,14 +73,144 @@ kubectl exec webapp -- cat /log/app.log
 [2026-07-22 16:23:27,499] INFO in event-simulator: USER4 is viewing page1
 [2026-07-22 16:23:28,500] INFO in event-simulator: USER1 is viewing page1
 
-##
+## Exportar el pod para editarlo
+kubectl get pods webapp -o yaml > webapp_pod_editable.yaml
+
+## Borrar el pod después de exportar
 kubectl delete pods webapp 
 pod "webapp" deleted from default namespace
 
+## Localizar los pods, si no hay muestra que no se enocntró
 kubectl get pods -o wide 
 No resources found in default namespace.
 
+## Localizar el log, si se ha borrado no debe encontrarse
 kubectl exec webapp -- cat /log/app.log
 Error from server (NotFound): pods "webapp" not found
 
-##
+## Edita el fichero yaml para adaptarlo
+nano webapp_pod_editable.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp
+spec:
+  containers:
+  - name: event-simulator
+    image: kodekloud/event-simulator
+    env:
+    - name: LOG_HANDLERS
+      value: file
+    volumeMounts:
+    - mountPath: /log
+      name: log-volume
+  volumes:
+  - name: log-volume
+    hostPath:
+      # directory location on host
+      path: /var/log/webapp
+      # this field is optional
+      type: Directory
+kubectl replace -f webapp_pod_editable.yaml --force
+pod/webapp replaced
+
+## Crea un nuevo fichero para crear un Volumen Persistente
+nano pv-log.yaml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-log
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 100Mi
+  hostPath:
+   path: /pv/log
+kubectl apply -f pv-log.yaml 
+persistentvolume/pv-log created
+
+## Crea un fichero nuevo para crear un Reclamador de Volumenes
+nano claim-log1.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: claim-log-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+kubectl apply -f claim-log1.yaml 
+persistentvolumeclaim/claim-log-1 created
+
+## Cosulta los Reclamadores de Volumen activos
+kubectl get persistentvolumeclaims -o wide 
+NAME          STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE     VOLUMEMODE
+claim-log-1   Pending                                                     ["unset"]                 2m38s   Filesystem
+
+## Consulta los Volumenes Persistentes activos
+kubectl get persistentvolume -o wide 
+NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE     VOLUMEMODE
+pv-log   100Mi      RWX            Retain           Available                          ["unset"]                          9m56s   Filesystem
+
+## Edita el Reclamador para adaptarlo a la nueva especificación
+nano claim-log1.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: claim-log-1
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Mi
+kubectl replace -f claim-log1.yaml --force 
+persistentvolumeclaim "claim-log-1" deleted from default namespace
+persistentvolumeclaim/claim-log-1 replaced      
+
+## Consulta su estado
+kubectl get persistentvolumeclaims 
+NAME          STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+claim-log-1   Bound    pv-log   100Mi      RWX                           ["unset"]                 67s
+
+## Edita el pod para adaptarlo al reclamador de volumen
+nano webapp_pod_editable.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp
+spec:
+  containers:
+  - name: event-simulator
+    image: kodekloud/event-simulator
+    env:
+    - name: LOG_HANDLERS
+      value: file
+    volumeMounts:
+    - mountPath: /log
+      name: log-volume
+
+  volumes:
+  - name: log-volume
+    persistentVolumeClaim:
+      claimName: claim-log-1
+kubectl replace -f webapp_pod_editable.yaml --force 
+pod/webapp replaced      
+
+## Borra el pod Webapp
+kubectl delete pod webapp 
+pod "webapp" deleted from default namespace
+
+## Consulta el reclamador de volumen
+kubectl get persistentvolumeclaims -o wide 
+NAME          STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+claim-log-1   Deleted    pv-log   100Mi      RWX                           ["unset"]                 10m   Filesystem
+
+## Consulta el volumen persistente activo
+controlplane ~ ➜  kubectl get persistentvolume -o wide 
+NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                 STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE   VOLUMEMODE
+pv-log   100Mi      RWX            Retain           Available    default/claim-log-1                  ["unset"]                          22m   Filesystem
