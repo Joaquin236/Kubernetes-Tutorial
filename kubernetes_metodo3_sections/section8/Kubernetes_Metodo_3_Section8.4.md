@@ -1,7 +1,7 @@
 ## 80.1º El volumen persistente ofrece una centralización de los volumenes de montaje, en el modo normal los pods deben ser modificados uno por uno. Lo mejor de usar el modo persistente es adpatar los pods una vez y se ajusta al servicio de almacenamiento
 
 ## 80.2º Muestra de un volumen persistente en yaml
-nano pv-definition.yaml
+nano pvc-definition.yaml
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -14,7 +14,7 @@ spec:
   awsElasticBlockStore:
     volumeID: ["volume-id"]
     fsType: ext4
-kubectl apply -f pv-definition.yaml
+kubectl apply -f pvc-definition.yaml
 kubectl get persistentvolume
 
 ## 80.3º Las reclamaciones de volumen son objetos diferentes frente al objeto de volumen_persistente pero dependen entre sí. El administrador crea el volumen y el usuario crea el objeto de reclamar el volumen. El sistema debe localizar el volumen que lleve la capacidad suficiente, el modo de acceso, el modo de volumen, el tipo de selector y la clase de almacenamiento.
@@ -22,18 +22,18 @@ kubectl get persistentvolume
 ## 80.4º Cuando hay un volumen en uso y otro pod no puede usarlo estará en estado ["pendiente"] hasta que lo pueda recibir. Tras recibirlo empieza a trabajar, los metadatos deben coincidir entre el volumen_persistente y el reclamador_de_volumen
 
 ## 80.5º Muestra de fichero yaml para reclamar
-nano pv-definition.yaml
+nano pvc-definition.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: myclain
+  name: myclaim
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
    requests:
      storage: 500Mi
-kubectl create -f pv-definition.yaml
+kubectl create -f pvc-definition.yaml
 kubectl get persistentvolumeclaim
 
 ## 80.6º Si necesitamos borrar un volumen persistente que no sea necesario, usamos el comando
@@ -193,7 +193,6 @@ spec:
     volumeMounts:
     - mountPath: /log
       name: log-volume
-
   volumes:
   - name: log-volume
     persistentVolumeClaim:
