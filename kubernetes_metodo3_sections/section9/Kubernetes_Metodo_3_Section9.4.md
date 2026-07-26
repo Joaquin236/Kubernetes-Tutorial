@@ -16,6 +16,6 @@ iptables -t nat -A POSTROUTING -s 192.168.15.0/24 -j MASQUERADE
 
 ## 85.4º En una infraestructura con red local [192.168.1.0/24], hay 3 nodos con red de host ["*.11","*.12","*.13"], cada nodo tiene un pod, el nodo ofrece una red de puente v-net-0, cada red virtual/puente lleva ["10.244.1.0/24","10.244.2.0/24","10.244.3.0/24"], los pods tienen la red de host de la red virtual, para interactuar con otro pod de otro nodo y otro puente virtual necesita una tabla de enrutamiento. Cada uno de de los pods necesita hacer el camino de ida y vuelta.
 
-## 86.1º Para consultar la configuración de las interfaces de red del contenedor se realiza un listado a los directorios desde /opt/cni/bin y /etc/cni/net.d
+## 85.5º Para consultar la configuración de las interfaces de red del contenedor se realiza un listado a los directorios desde /opt/cni/bin y /etc/cni/net.d
 ls -l /opt/cni/bin ; ls -l /etc/cni/net.d
 ## Dentro del fichero /etc/cni/net.d/10-bridge.conf encontraremos un fichero con el formato JSON sobre la configuración del CNI y los valores de parámetro
