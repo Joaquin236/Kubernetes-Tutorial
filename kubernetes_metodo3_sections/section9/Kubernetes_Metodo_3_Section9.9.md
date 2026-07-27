@@ -28,6 +28,10 @@ kube-root-ca.crt                                       1      20m
 kubeadm-config                                         1      20m
 kubelet-config                                         1      20m
 
+## Localizar la raiz de dominio en la descripcion del coredns en configmaps en el ns kube-system
+kubectl describe configmaps coredns -n kube-system | grep cluster
+    kubernetes cluster.local in-addr.arpa ip6.arpa
+
 ## Consultar los servicios en default
 kubectl get service -o wide 
 NAME           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE   SELECTOR
@@ -50,11 +54,124 @@ payroll        web                                    1/1     Running   0       
 kubectl get namespaces | grep pay
 payroll           Active   25m
 
-
 ## Consultar los pods del ns payroll
 kubectl get pods -n payroll -o wide 
 NAME    READY   STATUS    RESTARTS   AGE     IP            NODE           NOMINATED NODE   READINESS GATES
 mysql   1/1     Running   0          7m30s   172.17.0.10   controlplane   [none]           [none]
 web     1/1     Running   0          25m     172.17.0.4    controlplane   [none]           [none]
 
-## Corrige un fallo del fichero mysql_deploy.yaml
+## Localziar los servicios del espacio de nombre payroll
+kubectl get service -n payroll 
+NAME          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+mysql         ClusterIP   172.20.204.219   <none>        3306/TCP   2m31s
+web-service   ClusterIP   172.20.99.46     <none>        80/TCP     10m
+
+## Corrige un fallo del fichero mysql_deploy.yaml, localiza las lineas afectadas, edita el deploy y applica la webapp
+kubectl describe deployments.apps webapp | grep DB
+      DB_Host:      mysql
+      DB_User:      root
+      DB_Password:  paswrd
+
+kubectl get deployments.apps webapp -o yaml > deploy_webapp_file.yaml
+nano deploy_webapp_file.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2026-07-27T19:57:26Z"
+  generation: 1
+  labels:
+    name: webapp
+  name: webapp
+  namespace: default
+  resourceVersion: "1937"
+  uid: b466c08a-5c29-4b33-be6d-363fd9e89a4a
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      name: webapp
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: webapp
+    spec:
+      containers:
+      - env:
+        - name: DB_Host
+          value: mysql.payroll
+        - name: DB_User
+          value: root
+        - name: DB_Password
+          value: paswrd
+        image: mmumshad/simple-webapp-mysql
+        imagePullPolicy: Always
+        name: simple-webapp-mysql
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2026-07-27T19:57:31Z"
+    lastUpdateTime: "2026-07-27T19:57:31Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-07-27T19:57:26Z"
+    lastUpdateTime: "2026-07-27T19:57:31Z"
+    message: ReplicaSet "webapp-57f9844586" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  terminatingReplicas: 0
+  updatedReplicas: 1
+kubectl apply -f deploy_webapp_file.yaml 
+Warning: resource deployments/webapp is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+deployment.apps/webapp configured
+Respuesta de la pagina_web de pruebas --> Environment Variables: DB_Host=mysql.payroll; DB_Database=Not Set; DB_User=root; DB_Password=paswrd;
+From webapp-f8788bffc-466vz!
+
+## Realizar una consulta nslooup al servidor mysql.payroll a traves de kubectl exec con el pod hr
+kubectl exec hr -- nslookup mysql.payroll 
+Server:         172.20.0.10
+Address:        172.20.0.10#53
+
+Name:   mysql.payroll.svc.cluster.local
+Address: 172.20.204.219
+
+## Crear un fichero con las respuestas del comando
+kubectl exec hr -- nslookup mysql.payroll > /root/CKA/nslookup.out 
+
+## Localizar el fichero
+ls -l /root/CKA/
+total 4
+-rw-r--r-- 1 root root   0 Jul 27 20:15 nslookup.out
+
+## Visualizar el fichero exitoso
+cat /root/CKA/nslookup.out 
+Server:         172.20.0.10
+Address:        172.20.0.10#53
+
+Name:   mysql.payroll.svc.cluster.local
+Address: 172.20.204.219
