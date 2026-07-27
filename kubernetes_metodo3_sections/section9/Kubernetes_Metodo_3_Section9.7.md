@@ -29,3 +29,37 @@ iptables -L -T nat | grep db-service
 
 ## 87.9 El fichero /var/log/kube-proxy.log contiene el registro con los sucesos del kube-proxy
 cat /var/log/kube.log
+
+## Localizar el nodo controlplane
+kubectl get nodes -o wide | grep control
+controlplane   Ready    control-plane   15m   v1.35.0   10.244.102.214   [none]        Ubuntu 22.04.5 LTS   6.8.0-90-generic   containerd://1.7.22
+
+## Filtrar el fichero /etc/kubernetes/manifest/kube-controller-manager.yaml para localizar el cidr
+cat /etc/kubernetes/manifests/kube-controller-manager.yaml | grep 172.17
+    - --cluster-cidr=172.17.0.0/16
+
+## Consultar el servicio kubernetes
+kubectl get service -o wide 
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+kubernetes   ClusterIP   172.20.0.1   [none]        443/TCP   18m   [none]
+
+## Consultar los pods del kube-system y filtrar por nombre kube-proxy* 
+kubectl get pods -o wide -n kube-system | grep kube-proxy
+kube-proxy-9rq62                           1/1     Running   0          21m   10.244.102.214   controlplane   [none]           [none]
+kube-proxy-cdgqp                           1/1     Running   0          21m   10.244.34.228    node01         [none]           [none]
+
+## Mostrar el registro de eventos del pod kube-proxy-cdgqp en kube-system
+kubectl logs -n kube-system kube-proxy-cdgqp 
+I0727 13:48:04.055113      [1_server_linux.go:53] "Using iptables proxy"
+I0727 13:48:04.134124      [1_shared_informer.go:370] "Waiting for caches to sync"
+I0727 13:48:04.234433      [1_shared_informer.go:377] "Caches are synced"
+I0727 13:48:04.234460      [1_server.go:218] "Successfully retrieved NodeIPs" NodeIPs=["10.244.34.228"]
+
+## desbribir el pod kube-proxy-9rq62
+kubectl describe pods -n kube-system kube-proxy-9rq62
+
+## Consultar el ds del espacio de nombres kube-system
+kubectl get ds -n kube-system 
+NAME         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+canal        2         2         2       2            2           kubernetes.io/os=linux   30m
+kube-proxy   2         2         2       2            2           kubernetes.io/os=linux   30m
