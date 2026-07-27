@@ -15,6 +15,7 @@ curl http://web-service.apps.svc
 
 ## 88.7 Todos los objetos se agrupan en el dominio raiz del cluster, llamado cluster.local.
 curl http://web-service.apps.svc.cluster.local
+curl http://web-service.apps.pod.cluster.local
 
 ## 88.8 Los Pods no se les asigna este sistema por defecto, se puede habilitar, el sistema crea un nombre basado en la ip separado por guiones, el espacio de nombre es el mismo y el tipo es el pod, la raiz siempre sera la misma.
 |HostName   |NameSpace|Type |Root         |IP Address   |
