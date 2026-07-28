@@ -102,3 +102,19 @@ kubectl get deployment
 kubectl get configMap
 kubectl get service
 kubectl get serviceAccount
+
+## 89.10 Cada una de estas reglas definen el uso de los nombres de dominio, desde canalizar el trafico hasta gestionar el contenido multimedia, administrar el stock, pago y la lista del carro virtual de la tienda alojada en el servidor. La cuarta regla se encarga de los detalles no mencionados en la descipcion. Distribucion del las direcciones del servidor web y las posibles reglas de conexion establecidas, se le conoce como ingress-rules
+|URL  |www.my-online-store.com|www.wear.my-online-store.com|www.watch.my-online-store.com|Others_URLs|
+|-----|-----------------------|----------------------------|-----------------------------|-----------|
+|Rules|Rule_1                 |Rule_2                      |Rule_3                       |Rule_4     |
+
+## Dentro de cada regla se establece los parametros necesarios y la url de acceso
+
+## Regla-1 ['http://my-online-store.com/wear','http://www.my-online-store.com/watch','http://www.my-online-store.com/listen'] Tambien se necesita una URL para mostrar el mensaje de contenido no esta disponible
+
+## Regla-2 ['www.wear.my-online-store.com/','www.wear.my-online-store.com/returns','www.wear.my-online-store.com/support'] Estas URLs ofrecen accesos a la tienda, facilitar la devolucion de compras, ofrecer soporte y atencion al cliente
+
+## Regla-3 ['www.watch.my-online-store.com/','www.watch.my-online-store.com/movies','www.watch.my-online-store.com/TV'] Contienen el acceso a los datos multimedia y television en abierto desde internet
+
+## Regla-4 ['http://listen.my-online-store.com/','http://eat.www.my-online-store.com/','http://drink.www.my-online-store.com/'] Almacena y administra el contenido que no se ha insertado en las reglas anteriores
+
