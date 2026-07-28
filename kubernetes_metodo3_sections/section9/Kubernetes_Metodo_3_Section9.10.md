@@ -118,3 +118,62 @@ kubectl get serviceAccount
 
 ## Regla-4 ['http://listen.my-online-store.com/','http://eat.www.my-online-store.com/','http://drink.www.my-online-store.com/'] Almacena y administra el contenido que no se ha insertado en las reglas anteriores
 
+## 89.11 La regla afecta a www.my-online-store.com, hay dos rutas que ofrecen contenido ['/wear','/watch'], el servidor esta conectado a las rutas y da acceso a los dos contenidos
+nano ingress-wear.yaml
+apiVerion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-wear
+spec:
+  defaultBackend:
+    service:
+      name: wear-service
+      port: 80
+kubectl create -f ingress-wear.yaml
+
+nano ingress-wear-watch_1.yaml
+apiVerion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-wear-watch
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /wear
+        backend:
+          service:
+            name: wear-service
+            port: 80
+      - path: /watch
+        backend:
+          service:
+            name: watch-service
+            port: 80
+kubectl create -f ingress-wear-watch_1.yaml
+
+## 89.12 Este fichero incorpora el parametro del host
+nano ingress-wear-watch_2.yaml
+apiVerion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-wear-watch
+spec:
+  rules:
+  - host: wear.my-online-storage.com
+    http:
+      paths:
+      - path: /wear
+        backend:
+          service:
+            name: wear-service
+            port: 80
+  - host: watch.my-online-store.com
+    http:
+      paths:
+      - path: /watch
+        backend:
+          service:
+            name: watch-service
+            port: 80
+kubectl create -f ingress-wear-watch_2.yaml
