@@ -5,6 +5,7 @@
 ## 89.3 Empezamos con un proxy inverso o equilibrador de carga con nginx, traefik o haproxy. Kubernetes los configura para crear las tablas de enrutamiento de trafico a los servicios. Durante la configuracion se definen rutas URL y el SSL. El Ingress se implementa como una solucion compatible y se establece las reglas de configuracion. Los recursos se definen con ficheros de despliegue similares a los de los objetos. 
 
 ## 89.4 Este fichero es el que necesitamos para desplegar el deploy con el Ingress
+nano nginx-ingress-controller_deploy.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,3 +45,31 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: nginx-configuration
+
+## 89.5 En la seccion de los puertos se declara el acceso por puerto 80 y 443
+ports:
+  - name: http
+    containterPort: 80
+  - name: https
+    containerPort: 443
+
+## 89.6 A parte del deploy, desplegamos este servicio con estos valores
+nano nginx-ingress_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    name: nginx-ingress
+
