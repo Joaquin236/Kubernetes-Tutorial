@@ -83,3 +83,22 @@ metadata:
   name: nginx-ingress-serviceaccount
 kubectl apply -f nginx-ingress-serviceaccount.yaml
 
+## 89.8 Un objeto intermedio entre las aplicaciones, el servidor, el wear y el ingress es el servicio del wear. Se declara con un fichero y se ejecuta con Backend
+nano ingress-wear_file.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-wear
+spec:
+  defaultBackend:
+    service:
+      name: wear-service
+      port: 80
+kubectl apply -f ingress-wear_file.yaml
+
+## 89.9 Los objetos creados se pueden consultar con
+kubectl get ingress
+kubectl get deployment
+kubectl get configMap
+kubectl get service
+kubectl get serviceAccount
