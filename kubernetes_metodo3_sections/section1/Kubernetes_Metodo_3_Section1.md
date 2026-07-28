@@ -192,3 +192,8 @@ spec:
     image: nginx
 
 kubectl apply -f pod.yaml
+
+## Si necesitamos consultar todos los objetos, disponemos de este comando. Genera una salida amplia de información
+kubectl get all --all-namespaces
+## Para filtrar tenemos que añadir el | grep [nombre_de_elemento]
+kubectl get all --all-namespaces | grep [target_name]
