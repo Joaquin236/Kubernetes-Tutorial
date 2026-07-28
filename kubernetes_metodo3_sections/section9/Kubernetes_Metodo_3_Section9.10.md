@@ -45,6 +45,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: nginx-configuration
+kubectl apply -f nginx-ingress-controller_deploy.yaml
 
 ## 89.5 En la seccion de los puertos se declara el acceso por puerto 80 y 443
 ports:
@@ -72,4 +73,13 @@ spec:
     name: https
   selector:
     name: nginx-ingress
+kubectl apply -f nginx-ingress_service.yaml
+
+## 89.7 Necesitaremos desplegar esta cuenta de servicio para establecerla en el despliegue principal
+nano nginx-ingress-serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-ingress-serviceaccount
+kubectl apply -f nginx-ingress-serviceaccount.yaml
 
