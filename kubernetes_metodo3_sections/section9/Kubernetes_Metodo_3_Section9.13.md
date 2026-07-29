@@ -32,3 +32,19 @@ helm install ngf oci://ghcr.io/nginx/charts/nginx-gateway-fabric --create-namesp
 ## 90.9º La clase gateway es implementada por un controlador. Objetivos: ["Despelgar_la_configuración_desde_la_implementación_en_curso"."Soporta_multiples_implementaciones_en_un_solo_cluster"]
 
 ## 90.10º El Gateway de Kubernetes es un recurso que define como el tráfico entra en el cluster. Los protocolos específicos, los puertos y las tablas de enrutamiento.
+
+## 90.11º El HTTPRoute define como el tráfico es permitido en los servicios de Kubernetes. Funciona en conjunto con el Gateway API para las peticiones basadas en reglas.
+
+## 90.12º Las redirecciones y sobreescrituras son herramientas poderosas para modificar las respuestas/peticiones inminentes, antes de llegar al servicio backend.
+
+## 90.13º Las cabeceras HTTP se pueden modificar según las respuestas: ["add","set","remove"]
+
+## 90.13º El filtro de tráfico permite distribuirlo entre multiles servicios de backend. Esto es ofrecido en canary-deployments.
+
+## 90.14º La respuesta en espejo permite enviar una copia del servicio inminente a otro servicio para verificar/evaluar sin afectar al servicio primario.
+
+## 90.15º La capa de seguridad [TLS] es usada para encriptar tráfico entre clientes y servidores, asegurando la conexión frente a los ataques. A través del Gateway se puede establecer esta capa usando un certificado alojado en el kubernetes-secret. Los servicios backend reciben el contenido desencriptado para que le resulte legible.
+
+## 90.16º El Gateway API soporta mucho más que el tráfico HTTP. Puedes configurarlo con los protocolos: ["TCP","UDP","gRPC"]. La flexibilidad que ofrece da soporte a diversas aplicaciones, bases de datos y microservicios.
+
+
