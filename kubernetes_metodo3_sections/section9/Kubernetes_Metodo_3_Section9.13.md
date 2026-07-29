@@ -183,3 +183,43 @@ spec:
       - kind: HTTPRoute
 kubectl apply -f Gateway_secure.yaml
 
+## 90.25º Muestra del fichero canary-ingress.yaml
+nano canary-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "20"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-v2
+            port: 
+              number: 80
+kubectl apply -f canary-ingress.yaml
+
+## 90.26º Muestra del fichero de aplicación de Gateway
+nano app-gateway.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: split-traffic
+spec:
+  parentRefs:
+  - name: app-gateway
+  rules:
+  - backendRefs:
+    - name: app-v1
+      port: 80
+      weight: 80
+    - name: app-v2
+      port: 80
+      weight: 20
+kubectl apply -f app-gateway.yaml
