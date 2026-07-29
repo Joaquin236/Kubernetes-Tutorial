@@ -13,14 +13,14 @@
 ## 90.7º La Gateway Api ofrece una completa configuración visible desde un solo fichero, sin necesidad de configuraciones a parte, puede haber cambios entre las versiones v1/v2, permite dividir el tráfico de red en 80% la v1 y 20% la v2. No necesita anotaciones en el fichero. Permitiendo funcionar en cualquier despliegue de la Gateway API. 
 
 ## Docuemtación extra:
-https://gateway-api.sigs.k8s.io/docs/introduction/
-https://docs.nginx.com/nginx-gateway-fabric/install/helm/
-https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/
-https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
-https://gateway-api.sigs.k8s.io/guides/user-guides/http-header-modifier/
-https://gateway-api.sigs.k8s.io/guides/user-guides/traffic-splitting/
-https://gateway-api.sigs.k8s.io/guides/user-guides/http-request-mirroring/
-https://gateway-api.sigs.k8s.io/guides/user-guides/tls/
+- https://gateway-api.sigs.k8s.io/docs/introduction/
+- https://docs.nginx.com/nginx-gateway-fabric/install/helm/
+- https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/
+- https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
+- https://gateway-api.sigs.k8s.io/guides/user-guides/http-header-modifier/
+- https://gateway-api.sigs.k8s.io/guides/user-guides/traffic-splitting/
+- https://gateway-api.sigs.k8s.io/guides/user-guides/http-request-mirroring/
+- https://gateway-api.sigs.k8s.io/guides/user-guides/tls/
 
 ## 90.8º En caso de no estar instalado el Gateway API, se inserta el comando de instalación
 kubectl kustomize "https://github.com/nginx/nginx-gateway-fabric/config/crd/gateway-api/standard?ref=v1.6.2" | kubectl apply -f -
