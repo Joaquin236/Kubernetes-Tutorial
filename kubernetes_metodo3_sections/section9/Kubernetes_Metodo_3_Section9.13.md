@@ -145,5 +145,41 @@ spec:
     port: 80
 kubectl apply -f gateway.yaml
 
+## 90.23º Muestra del fichero ingress cors con petición de seguridad
+nano Ingress-cors_secure.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: secure-app
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"  
+spec:
+  tls:
+  - hosts:
+    - secure.example.com
+    secretName: tls-secret
+kubectl apply -f Ingress-cors_secure.yaml
 
+## 90.24º Muestra del fichero gateway con parámetros para puentear con Ingress-cors_secure.yaml
+nano Gateway_secure.yaml
+apiVerion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: secure-gateway
+spec:
+  gatewayClassName: example-gc
+  listeners:
+  - name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - kind: Secret
+        name: tls-secret
+    allowedRoutes:
+      kinds:
+      - kind: HTTPRoute
+kubectl apply -f Gateway_secure.yaml
 
