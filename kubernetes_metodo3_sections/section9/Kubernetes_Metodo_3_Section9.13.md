@@ -223,3 +223,35 @@ spec:
       port: 80
       weight: 20
 kubectl apply -f app-gateway.yaml
+
+## 90.27º Muestra del fichero http-route con las condiciones de tráfico
+nano http-route.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata: name: cors-route
+spec:
+  parentRets:
+  - name: my-gateway
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api
+    filters:
+    - type: ResponseHeaderModifier
+      responseHeaderModifier:
+      add:
+      - name: Access-Control-Allow-Origin
+        value: "*"
+      - name: Access-Control-Allow-Methods
+        value: "GET,POST,PUT,DELETE,OPTIONS"
+      - name: Access-Control-Allow-Headers
+        value: "Content-Type,Autorization"
+      - name: Access-Control-Allow-Credentials
+        value: "true"
+      - name: Access-Control-Max-Age
+        value: "3600"
+  backendRefs:
+  - name: api-service
+    port: 80
+kubectl apply -f http-route.yaml
