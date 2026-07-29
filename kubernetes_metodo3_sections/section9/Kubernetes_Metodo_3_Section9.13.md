@@ -47,7 +47,7 @@ helm install ngf oci://ghcr.io/nginx/charts/nginx-gateway-fabric --create-namesp
 
 ## 90.16º El Gateway API soporta mucho más que el tráfico HTTP. Puedes configurarlo con los protocolos: ["TCP","UDP","gRPC"]. La flexibilidad que ofrece da soporte a diversas aplicaciones, bases de datos y microservicios.
 
-## 90.17º Muestra de un fichero Ingress estandar
+## 90.17º Muestra de un fichero Ingress estándar
 nano Ingress-wear-watch.yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -85,7 +85,7 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
 kubectl apply -f Ingress-cors.yaml
 
-## 90.19º Muestra de fichero ingress standar para Traefik
+## 90.19º Muestra de fichero ingress estándar para Traefik
 nano Ingress_stand_Traefik.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -99,4 +99,51 @@ metadata:
      Acces-Control-Allow-Credentials: "true"
      Acces-Control-Max-Age: 3600
 kubectl apply -f Ingress_stand_Traefik.yaml
+
+## 90.20º Muestra de fichero http-route.yaml
+nano http-route.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: example-httproute
+spec:
+  parentRefs:
+  - name: example-gateway
+  hostsnames:
+  - "www.example.com"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /login
+    backendRefs:
+    - name: example-svc
+      port: 8080
+kubectl apply -f http-route.yaml
+
+## 90.21º Muesta del fichero gateway-class.yaml
+nano gateway-class.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: example-class
+spec:
+  controllerName: example.com/gateway-controller
+kubectl apply -f gateway-class.yaml
+
+## 90.22º Muestra del fichero gateway.yaml
+nano gateway.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: example-gateway
+spec:
+  gatewayClassName: example-gateway
+  listernes:
+  - name: http
+    protocol: HTTP
+    port: 80
+kubectl apply -f gateway.yaml
+
+
 
