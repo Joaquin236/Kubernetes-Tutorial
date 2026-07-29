@@ -47,4 +47,56 @@ helm install ngf oci://ghcr.io/nginx/charts/nginx-gateway-fabric --create-namesp
 
 ## 90.16º El Gateway API soporta mucho más que el tráfico HTTP. Puedes configurarlo con los protocolos: ["TCP","UDP","gRPC"]. La flexibilidad que ofrece da soporte a diversas aplicaciones, bases de datos y microservicios.
 
+## 90.17º Muestra de un fichero Ingress estandar
+nano Ingress-wear-watch.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-wear-watch
+  annotations: wear.my-online-store.com
+ nginx.ingress.kubernetes.io/ssl-redirect: "true"
+ nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+rules:
+- host: wear.my-online-store.com
+  http:
+    path: /foo
+    backend:
+      serviceName: wear-service
+      servicePort: 80
+- host: watch.my-online-store.com
+  http:
+    paths:
+    - backend:
+        serviceName: watch-service
+        servicePort: 80
+kubectl apply -f Ingress-wear-watch.yaml
+
+## 90.18º Muestra de fichero ingress-cors para Nginx
+nano Ingress-cors.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cors-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://allowed-origin.com"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+kubectl apply -f Ingress-cors.yaml
+
+## 90.19º Muestra de fichero ingress standar para Traefik
+nano Ingress_stand_Traefik.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/headers.customresponseheaders:
+     Acces-Control-Allow-Origin: '*'
+     Acces-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS
+     Acces-Control-Allow-Headers: Content-Type,Autorization
+     Acces-Control-Allow-Credentials: "true"
+     Acces-Control-Max-Age: 3600
+kubectl apply -f Ingress_stand_Traefik.yaml
 
