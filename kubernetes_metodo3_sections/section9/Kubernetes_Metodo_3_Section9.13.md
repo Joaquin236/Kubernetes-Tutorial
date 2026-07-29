@@ -255,3 +255,12 @@ spec:
   - name: api-service
     port: 80
 kubectl apply -f http-route.yaml
+
+## 90.28º Tabla con los detalles de los objetos de servicios seguros
+|Objeto     | Capa del OSI          |Discrim-Rutas      |Soporte TLS|Propósito
+|-----------|-----------------------|-------------------|-----------|-----------------
+|HTTPRoute  |Capa 7: Aplicación     |Cualquiera en HTTP |Terminated |Rutas HTTP/HTTPS
+|TLSRoute   |Capas [4-7]: Trans-Apli|SNI o TLS          |Passthrough|Rutas TLS & HTTPS
+|TCPRoute   |Capa 4: Trasporte      |Puerto de Destino  |Passthrough|Permitir acceso a TCP
+|UDPRoute   |Capa 4: Transporte     |Puerto de Destino  |None       |Permitir acceso a UDP
+|GRPCRoute  |Capa 7: Aplicación     |Cualquiera en gRPC |Terminated |Rutas gRPC sobre HTTP
