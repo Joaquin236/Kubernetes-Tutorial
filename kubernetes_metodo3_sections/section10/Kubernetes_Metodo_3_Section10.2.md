@@ -15,12 +15,12 @@
 ## 92.5º Google distribuye un servicio de alojamiento para trabajar en una infraestructura de Kubernetes, junto con el Google_Cloud. Amazon distribuye un alojamiento de Kubernetes con el Amazon Elastic.
 
 ## 92.6º Tabla con las valoraciones de las soluciones de virtualización
-|Valoración de opciones del modo aprendizaje |
-|--------------------------------------------|
-| Oracle VirtualBOX|············-618["68.3%"]|
-|VMWare WorkStation|·····-189["20.9%"]       |
-|       Cloud_1-AWS|············-424["46.9%"]|
-|       Cloud_2-GCP|·······-216["23.9%"]     |
-|     Cloud_3-Azure|····-134["14.8%"]        |
-|           Vagrant|···-125["13.8%"]         |
-|           Hyper-V|·-7["0.8%"]              |
+|Valoración de opciones del modo aprendizaje |905 Valoraciones         |
+|--------------------------------------------|-------------------------|
+| Oracle VirtualBOX                          |············-618["68.3%"]|
+|VMWare WorkStation                          |·····-189["20.9%"]       |
+|       Cloud_1-AWS                          |············-424["46.9%"]|
+|       Cloud_2-GCP                          |·······-216["23.9%"]     |
+|     Cloud_3-Azure                          |····-134["14.8%"]        |
+|           Vagrant                          |···-125["13.8%"]         |
+|           Hyper-V                          |·-7["0.8%"]              |
