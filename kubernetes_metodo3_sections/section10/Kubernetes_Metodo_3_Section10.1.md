@@ -14,4 +14,6 @@
 |251-500|N1-Standard-16 |16 vCPU  + 60,0 GB  RAM|C4.4xlarge     |16 vCPU  + 30,0 GB RAM  |
 |>500   |N1-Standard-32 |32 vCPU  + 120  GB  RAM|C4.8xlarge     |36 vCPU  + 60,0 GB RAM  |
 
+## 91.5º Para elegir entre conexión por la nube o bajo demamda. Neceistamos evaluar si queremos usar ["Kubeadm_para_on-prem","GKE_para_GCP","EKS_para_AWS","AKS_para_Azure"].
 
+## 91.6º Para elegir el almacenamiento del alojamiento, se necesita evaluar ["SSD-Backend_Alto-Rendimiento","Conexión_Multiple","Compatir_volumenes_al_pod","Etiquetar_nodos","Seleccionar_nodos"]
