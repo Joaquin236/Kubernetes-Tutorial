@@ -17,3 +17,5 @@
 ## 91.5º Para elegir entre conexión por la nube o bajo demamda. Neceistamos evaluar si queremos usar ["Kubeadm_para_on-prem","GKE_para_GCP","EKS_para_AWS","AKS_para_Azure"].
 
 ## 91.6º Para elegir el almacenamiento del alojamiento, se necesita evaluar ["SSD-Backend_Alto-Rendimiento","Conexión_Multiple","Compatir_volumenes_al_pod","Etiquetar_nodos","Seleccionar_nodos"]
+
+## 91.7º Los nodos pueden establecerce en máquinas virtuales o servidores físicos, en clusteres con 4 nodos en base a la carga de trabajo y nodos maestro/trabajador. ["Los_nodos_maestros_pueden_alojar_carga_de_trabajo","La_mejor_práctica_es_la_carga_de_trabajo_se_realiza_con_el_nodo_maestro"].los nodos se ubican en un sistema Linux x64 Bits. En clusters grandes es importante separar los cluster etcd del nodo maestro. 
