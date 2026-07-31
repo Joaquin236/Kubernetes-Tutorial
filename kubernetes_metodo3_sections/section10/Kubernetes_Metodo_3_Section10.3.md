@@ -7,7 +7,15 @@ kube-controller-manager --leader-elect true
 kube-controller-manager --leader-elect-lease-duration 15s
 kube-controller-manager --leader-elect-renew-deadline 10s
 kube-controller-manager --leader-elect-retry-period 2s
+wget -q --https-only "https://github.com/coreos/etcd/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz"
+tar -xfv etcd-v3.3.9-linux-amd64.tar.gz
+mv -v etcd-v3.3.9-linux-amd64/etcd/* /usr/local/bin
+mkdir -vp /etc/etcd /var/lib/etcd
+cp -v ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd
 
 ## 92.4º El ETCD se puede separar el conjunto del cluster interno. Cuando uno de ellos deja de funcionar la reduncia de servicios puede quedar afectado. Al separarlo reduce el riesgo de perder los pods, nodos y contenedores. 
 cat /etc/systemd/system/kube-apiserver.service
 
+etcdctl put name ["User_name"]
+etcdctl get name
+etcdctl get / --prefix --keys-only
