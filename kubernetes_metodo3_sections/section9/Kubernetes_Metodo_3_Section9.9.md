@@ -63,8 +63,8 @@ web     1/1     Running   0          25m     172.17.0.4    controlplane   [none]
 ## Localziar los servicios del espacio de nombre payroll
 kubectl get service -n payroll 
 NAME          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
-mysql         ClusterIP   172.20.204.219   <none>        3306/TCP   2m31s
-web-service   ClusterIP   172.20.99.46     <none>        80/TCP     10m
+mysql         ClusterIP   172.20.204.219   [none]        3306/TCP   2m31s
+web-service   ClusterIP   172.20.99.46     [none]        80/TCP     10m
 
 ## Corrige un fallo del fichero mysql_deploy.yaml, localiza las lineas afectadas, edita el deploy y applica la webapp
 kubectl describe deployments.apps webapp | grep DB

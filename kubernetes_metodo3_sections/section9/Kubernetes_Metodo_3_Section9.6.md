@@ -8,8 +8,8 @@ total 4
 ## Consultar los pods activos
 kubectl get pods -o wide 
 NAME       READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
-backend    1/1     Running   0          2m45s   172.17.0.4   controlplane   <none>           <none>
-frontend   1/1     Running   0          2m45s   172.17.0.5   controlplane   <none>           <none>
+backend    1/1     Running   0          2m45s   172.17.0.4   controlplane   [none]           [none]
+frontend   1/1     Running   0          2m45s   172.17.0.5   controlplane   [none]           [none]
 
 ## Visualiza en la consola el contenido de la URL 172.17.0.4
 kubectl exec -it frontend -- curl -m 5 172.17.0.4
@@ -147,8 +147,8 @@ whisker-6778f54f55-jfz8g                   2/2     Running   0          49s
 ## Consulta los pods activos
 kubectl get pods -o wide 
 NAME       READY   STATUS    RESTARTS   AGE   IP             NODE           NOMINATED NODE   READINESS GATES
-backend    1/1     Running   0          20s   172.17.49.72   controlplane   <none>           <none>
-frontend   1/1     Running   0          21s   172.17.49.71   controlplane   <none>           <none>
+backend    1/1     Running   0          20s   172.17.49.72   controlplane   [none]           [none]
+frontend   1/1     Running   0          21s   172.17.49.71   controlplane   [none]           [none]
 
 ## Intenta obtener el contenido de la web del servidor 172.17.49.72
 kubectl exec -it frontend -- curl -m 5 172.17.49.72

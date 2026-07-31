@@ -1,7 +1,7 @@
 ## Consultar los insgress en los ns
 kubectl get ingress -o wide --all-namespaces 
 NAMESPACE   NAME                 CLASS    HOSTS   ADDRESS          PORTS   AGE
-app-space   ingress-wear-watch   <none>   *       172.20.229.130   80      52s
+app-space   ingress-wear-watch   [none]   *       172.20.229.130   80      52s
 
 ## Consultar todos los controladores en los ns
 kubectl get controllerrevisions.apps --all-namespaces 
@@ -13,29 +13,29 @@ kube-system    kube-proxy-69494898cd       daemonset.apps/kube-proxy        1   
 kubectl get all --all-namespaces | grep controller
 ingress-nginx   pod/ingress-nginx-controller-7677dff578-x25hs   1/1     Running     0          9m46s
 kube-system     pod/kube-controller-manager-controlplane        1/1     Running     0          18m
-ingress-nginx   service/ingress-nginx-controller             NodePort    172.20.229.130   <none>        80:30080/TCP,443:32103/TCP   9m46s
-ingress-nginx   service/ingress-nginx-controller-admission   ClusterIP   172.20.180.89    <none>        443/TCP                      9m46s
+ingress-nginx   service/ingress-nginx-controller             NodePort    172.20.229.130   [none]        80:30080/TCP,443:32103/TCP   9m46s
+ingress-nginx   service/ingress-nginx-controller-admission   ClusterIP   172.20.180.89    [none]        443/TCP                      9m46s
 ingress-nginx   deployment.apps/ingress-nginx-controller   1/1     1            1           9m46s
 ingress-nginx   replicaset.apps/ingress-nginx-controller-7677dff578   1         1         1       9m46s
 
 ## Consultar los pods de todos los ns y filtrar por space
 kubectl get pods -A -o wide | grep space
-app-space       default-backend-68fd4d68f-9bpbr  1/1     Running     0          14m   172.17.0.6      controlplane   <none>           <none>
-app-space       webapp-video-68cff9d6fc-x5htk    1/1     Running     0          14m   172.17.0.5      controlplane   <none>           <none>
-app-space       webapp-wear-7759c9f9d4-ttnv6     1/1     Running     0          14m   172.17.0.4      controlplane   <none>           <none>
+app-space       default-backend-68fd4d68f-9bpbr  1/1     Running     0          14m   172.17.0.6      controlplane   [none]           [none]
+app-space       webapp-video-68cff9d6fc-x5htk    1/1     Running     0          14m   172.17.0.5      controlplane   [none]           [none]
+app-space       webapp-wear-7759c9f9d4-ttnv6     1/1     Running     0          14m   172.17.0.4      controlplane   [none]           [none]
 
 ## Consultar el ingress de los ns
 kubectl get ingress -o wide -A
 NAMESPACE   NAME                 CLASS    HOSTS   ADDRESS          PORTS   AGE
-app-space   ingress-wear-watch   <none>   *       172.20.229.130   80      16m
+app-space   ingress-wear-watch   [none]   *       172.20.229.130   80      16m
 
 ## Descibir todos los ingress
 kubectl describe ingress -A
 Name:             ingress-wear-watch
-Labels:           <none>
+Labels:           [none]
 Namespace:        app-space
 Address:          172.20.229.130
-Ingress Class:    <none>
+Ingress Class:    [none]
 Default backend:  <default>
 Rules:
   Host        Path  Backends
