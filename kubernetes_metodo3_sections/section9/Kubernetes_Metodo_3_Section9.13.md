@@ -21,6 +21,7 @@
 - https://gateway-api.sigs.k8s.io/guides/user-guides/traffic-splitting/
 - https://gateway-api.sigs.k8s.io/guides/user-guides/http-request-mirroring/
 - https://gateway-api.sigs.k8s.io/guides/user-guides/tls/
+- https://gateway-api.sigs.k8s.io/reference/api-types/gatewayclass/
 
 ## 90.8º En caso de no estar instalado el Gateway API, se inserta el comando de instalación
 kubectl kustomize "https://github.com/nginx/nginx-gateway-fabric/config/crd/gateway-api/standard?ref=v1.6.2" | kubectl apply -f -

@@ -2,16 +2,25 @@
 kubectl get pods -o wide -n kube-system | grep core
 coredns-6f6c7df987-4rpj2               1/1     Running   0          12m   172.17.0.3      controlplane   [none]           [none]
 coredns-6f6c7df987-sjlhj               1/1     Running   0          12m   172.17.0.2      controlplane   [none]           [none]
+## There're two PODS at/on/in the cluster
 
 ## Consultar los servicios, enfocarse en kube-system
 kubectl get service -o wide -n kube-system 
 NAME       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)                  AGE   SELECTOR
 kube-dns   ClusterIP   172.20.0.10   [none]        53/UDP,53/TCP,9153/TCP   14m   k8s-app=kube-dns
+##  IP is --> 172.20.0.10
 
 ## Consultar el deploy de kube-system
 kubectl get deployments.apps -n kube-system -o wide 
 NAME      READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                    SELECTOR
 coredns   2/2     2            2           17m   coredns      registry.k8s.io/coredns/coredns:v1.10.1   k8s-app=kube-dns
+
+## Localizar el path del deploy coredns
+kubectl describe deployments.apps coredns -n kube-system | grep -A2 Args
+    Args:
+      -conf
+      /etc/coredns/Corefile
+
 
 ## Buscar la ruta del fichero Core en la descripcion del deploy en el ns kube-system
 kubectl describe deployments.apps -n kube-system | grep Core
@@ -32,12 +41,27 @@ kubelet-config                                         1      20m
 kubectl describe configmaps coredns -n kube-system | grep cluster
     kubernetes cluster.local in-addr.arpa ip6.arpa
 
-## Consultar los servicios en default
+## Consultar los servicios en default y en payroll
+kubectl get pods -n default -o wide ; kubectl get pods -n payroll -o wide 
+NAME                READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
+hr                  1/1     Running   0          10m   172.17.0.6   controlplane   [none]           [none]
+simple-webapp-1     1/1     Running   0          10m   172.17.0.7   controlplane   [none]           [none]
+simple-webapp-122   1/1     Running   0          10m   172.17.0.8   controlplane   [none]           [none]
+test                1/1     Running   0          10m   172.17.0.5   controlplane   [none]           [none]
+NAME   READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
+web    1/1     Running   0          10m   172.17.0.4   controlplane   [none]           [none]
+
+## Consultar los servicios
 kubectl get service -o wide 
 NAME           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE   SELECTOR
-kubernetes     ClusterIP   172.20.0.1       [none]        443/TCP        23m   [none]
-test-service   NodePort    172.20.161.141   [none]        80:30080/TCP   13m   name=test
-web-service    ClusterIP   172.20.47.241    [none]        80/TCP         13m   name=hr
+kubernetes     ClusterIP   172.20.0.1       <none>        443/TCP        25m   <none>
+test-service   NodePort    172.20.244.221   <none>        80:30080/TCP   13m   name=test
+web-service    ClusterIP   172.20.100.237   <none>        80/TCP         13m   name=hr
+
+kubectl get service -o wide -n payroll 
+NAME          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+web-service   ClusterIP   172.20.111.105   <none>        80/TCP    15m   name=web
+
 
 ## Acceder a las webs de los servicios
 curl http://172.20.47.241
@@ -158,7 +182,7 @@ Server:         172.20.0.10
 Address:        172.20.0.10#53
 
 Name:   mysql.payroll.svc.cluster.local
-Address: 172.20.204.219
+Address: 172.20.116.14
 
 ## Crear un fichero con las respuestas del comando
 kubectl exec hr -- nslookup mysql.payroll > /root/CKA/nslookup.out 
