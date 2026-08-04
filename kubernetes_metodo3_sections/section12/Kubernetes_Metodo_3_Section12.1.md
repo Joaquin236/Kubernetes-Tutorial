@@ -91,10 +91,10 @@ kubectl apply -f wordpress_persistent_vol.yaml
 ## 96.2º La herramienta Helm si evalúa la aplicación que se encuentra en el cluster, también se le conoce como gestor de paquetes para Kubernetes. 
 
 ## 96.3º Con un solo comando se puede instalar toda la aplicación. Realiza un despliegue automático de diveros objetos. Algunos de sus comandos son
-helm install wordpress
-helm upgrade wordpress
-helm rollback wordpress
-helm unistall wordpress
+helm install wordpress  #--> Instalar wordpress
+helm upgrade wordpress  #--> Actualizar wordpress
+helm rollback wordpress #--> Restaurar wordpress
+helm unistall wordpress #--> Borrar wordpress
 
 ## 96.4º Para instalar el Helm se necesita un cluster de kuerbenetes operativo, admite multiplataforma. Estos son los comandos Linux para instalarlo
 ## Instalación dede snap

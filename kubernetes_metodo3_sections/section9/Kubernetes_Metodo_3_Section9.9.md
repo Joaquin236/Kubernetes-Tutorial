@@ -54,13 +54,13 @@ web    1/1     Running   0          10m   172.17.0.4   controlplane   [none]    
 ## Consultar los servicios
 kubectl get service -o wide 
 NAME           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE   SELECTOR
-kubernetes     ClusterIP   172.20.0.1       <none>        443/TCP        25m   <none>
-test-service   NodePort    172.20.244.221   <none>        80:30080/TCP   13m   name=test
-web-service    ClusterIP   172.20.100.237   <none>        80/TCP         13m   name=hr
+kubernetes     ClusterIP   172.20.0.1       [none]        443/TCP        25m   [none]
+test-service   NodePort    172.20.244.221   [none]        80:30080/TCP   13m   name=test
+web-service    ClusterIP   172.20.100.237   [none]        80/TCP         13m   name=hr
 
 kubectl get service -o wide -n payroll 
 NAME          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE   SELECTOR
-web-service   ClusterIP   172.20.111.105   <none>        80/TCP    15m   name=web
+web-service   ClusterIP   172.20.111.105   [none]        80/TCP    15m   name=web
 
 
 ## Acceder a las webs de los servicios
