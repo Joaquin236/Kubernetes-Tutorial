@@ -4,7 +4,7 @@
 
 ## 103.3º Las superposiciones nos ofrecerán personalizar el sistema en función del entorno, tenemos un fichero de despliegue como base, después establecemos ficheros de overlays/["dev","stg","prod"] con el contenido de las replicas.
 
-## 103.4º 
+## 103.4º Este listado describe las capacidades del Kustomize 
 - Kustomize crea despliegues con kubectl sin necesidad de instalar paquetes a parte.
 - Si quieres instalar el kustomize-cli para obtener la última versión. Kubectl no trabaja con la última versión por ahora.
 - No se requiere aprender con complejidad los sistemas de plantillas.
