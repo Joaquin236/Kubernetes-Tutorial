@@ -47,20 +47,37 @@ base + overlay = final_manifest
 
 ## 103.7º Estructura de directorios del entorno
 Env_dir/
-|-- dev/
-|-- stg/
-`-- prod/
+├── dev/
+├── stg/
+└── prod/
 
 ## 103.8º Estructura con directorio y fichero juntos
 Env_dir/
-|-- dev/
-    |-- depl_file.yaml
-    |-- service_file.yaml
-|-- stg/
-    |-- depl_file.yaml
-    |-- service_file.yaml
-`-- prod/
-    |-- depl_file.yaml
-    |-- service_file.yaml
+├── dev/
+│   ├─── depl_file.yaml
+│   ├─── service_file.yaml
+├── stg/
+│   ├─── depl_file.yaml
+│   ├─── service_file.yaml
+└── prod/
+    ├─── depl_file.yaml
+    ├─── service_file.yaml
 
-## 103.9º
+## 103.9º Estructura de un despliegue de K8S
+k8s/
+├─── base/ # --> Comparte o cruzar los valores predefinidos al entorno
+│    ├─── kustomization.yaml
+│    ├─── nginx-depl.yaml
+│    ├─── service.yaml
+│    └─── redis-depl.yaml
+└─── overlays/ # --> Entorno de configuración que añade o modifica la base de configuración
+     ├─── dev/
+     |    ├─── kustomization.yaml
+     |    └─── config-map.yaml
+     |
+     ├─── stg/
+     |    ├─── kustomization.yaml
+     |    └─── config-map.yaml
+     └─── prod/
+          ├─── kustomization.yaml
+          └─── config-map.yaml
