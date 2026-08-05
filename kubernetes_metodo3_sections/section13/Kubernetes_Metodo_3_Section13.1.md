@@ -29,4 +29,20 @@ spec:
         - name: nginx
           image: nginx
 
-## 103.6º
+## 103.6º Estructura de directorios del entorno
+Env_dir/
+|-- dev/
+|-- stg/
+`-- prod/
+
+## 103.7º 
+Env_dir/
+|-- dev/
+    |-- depl_file.yaml
+    |-- service_file.yaml
+|-- stg/
+    |-- depl_file.yaml
+    |-- service_file.yaml
+`-- prod/
+    |-- depl_file.yaml
+    |-- service_file.yaml
