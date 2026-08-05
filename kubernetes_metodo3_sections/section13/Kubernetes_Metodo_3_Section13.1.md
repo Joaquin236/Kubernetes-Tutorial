@@ -9,3 +9,24 @@
 - Si quieres instalar el kustomize-cli para obtener la última versión. Kubectl no trabaja con la última versión por ahora.
 - No se requiere aprender con complejidad los sistemas de plantillas.
 - Cada elemento de Kustomize usa plantillas YAML y puede validar y procesarlas
+
+## 103.5º Muestra del fichero nginx-depl.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: nginx
+  template:
+    metadata: 
+      labels:
+        component: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+
+## 103.6º
