@@ -11,6 +11,7 @@
 - Cada elemento de Kustomize usa plantillas YAML y puede validar y procesarlas
 
 ## 103.5º Muestra del fichero nginx-depl.yaml
+nano depl_base_file.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,13 +30,28 @@ spec:
         - name: nginx
           image: nginx
 
-## 103.6º Estructura de directorios del entorno
+## 103.6º Si establecemos ficheros de superposición de algunos valores, puede crear y sobreescribir los despliegues y cambiar los valores necesarios
+nano overlays_dev.yaml
+spec:
+  replicas: 1
+-------------------
+nano overlays_stg.yaml
+spec:
+  replicas: 2
+--------------------
+nano overlays_prod.yaml
+spec:
+  replicas: 5
+-------------------
+base + overlay = final_manifest
+
+## 103.7º Estructura de directorios del entorno
 Env_dir/
 |-- dev/
 |-- stg/
 `-- prod/
 
-## 103.7º 
+## 103.8º Estructura con directorio y fichero juntos
 Env_dir/
 |-- dev/
     |-- depl_file.yaml
@@ -46,3 +62,5 @@ Env_dir/
 `-- prod/
     |-- depl_file.yaml
     |-- service_file.yaml
+
+## 103.9º
