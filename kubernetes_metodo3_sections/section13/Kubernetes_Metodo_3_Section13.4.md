@@ -35,7 +35,7 @@ commonLabels:
 | kubeclt apply -f k8s                    |kubectl apply -f k8s/api|
 |kustomize build k8s/ | kubectl apply -f -|kubeclt apply -f k8s/db |
 
-## 109.2º Después de los comandos, se añade el fichero kustomization.yaml en la raiz del k8s, dentro hay parámetros para configurar
+## 109.2º Después de los comandos, se añade el fichero kustomization.yaml (Manualmente) en la raiz del k8s, dentro hay parámetros para configurar
 
 k8s     
 ├───Kustomization.yaml              
@@ -47,7 +47,7 @@ k8s
 |   └───DB_File2.yaml  --> api/db-service.yaml
 |                     
 |                     
-## Contenido del fichero genenerado por el comando kustomize build
+## Contenido del fichero genenerado manualmente
 nano kustomization_2.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -55,8 +55,8 @@ kind: Kustomization
 resources:
   - api/api-depl.yaml
   - api/api-service.yaml
-  - api/db-depl.yaml
-  - api/db-service.yaml
+  - db/db-depl.yaml
+  - db/db-service.yaml
 
 ## 109.3º Otra posible estructura es: Todos los ficheros están dentro de los directorios ["api","db","cache","kafka"]
 k8s           
@@ -64,4 +64,34 @@ k8s
 ├───db
 ├───cache
 └───kafka
+
+nano kustomization_3.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# kubernetes resources to be managed by kustomize
+resources:
+  - api/api-depl.yaml
+  - api/api-service.yaml
+  - db/db-depl.yaml
+  - db/db-service.yaml
+  - cache/config-depl.yaml
+  - cache/config-service.yaml
+  - cache/config-config.yaml
+  - kafka/kafka-depl.yaml
+  - kafka/kafka-service.yaml
+  - kafka/kafka-config.yaml
+
+## Distribución del fichero kustomization por cada subdirectorio
+k8s
+├───kustomization.yaml --> resources.["api","db","cache","kafka"]
+├───api
+|   └───kustomization.yaml
+├───db
+|   └───kustomization.yaml --> k8s/db/kustomization.yaml --> resources.["-db-depl.yaml","-db-service.yaml"]
+├───cache
+|   └───kustomization.yaml
+└───kafka
+    └───kustomization.yaml
+
+## 109.4º Cuando usamos este modo el contenido de los ficheros se unifica para compilar una estructura yaml de despliegue, el comando solo crea una vista previa en la consola, para aplicarla se añade el comando secundario de aplicar. El fichero kustomization.yaml se puede repetir dentro de los subdirectorios
 
