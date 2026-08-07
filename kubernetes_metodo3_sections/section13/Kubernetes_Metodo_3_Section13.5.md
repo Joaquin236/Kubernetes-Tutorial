@@ -29,7 +29,7 @@ data:
   password: "example"
 
 ## Contenido del fichero db-depl.yaml
-cat k8s/db/db-depl.yaml 
+nano /root/code/k8s/db/db-depl.yaml 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -59,8 +59,8 @@ spec:
                   name: db-credentials
                   key: username
 
-## 
-cat k8s/db/db-service.yaml 
+## Contenido del fichero db-service.yaml
+nano /root/code/k8s/db/db-service.yaml 
 apiVersion: v1
 kind: Service
 metadata:
@@ -74,8 +74,8 @@ spec:
       targetPort: 27017
   type: NodePort
 
-  ##
-  cat k8s/message-broker/rabbitmq-config.yaml 
+## Contenido del fichero rabbitmq-config.yaml
+nano /root/k8s/message-broker/rabbitmq-config.yaml 
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -84,8 +84,8 @@ data:
   username: "redis"
   password: "password123"
 
-##  
-cat k8s/message-broker/rabbitmq-service.yaml 
+## Contenido del fichero rabbitmq-service.yaml 
+nano /root/code/k8s/message-broker/rabbitmq-service.yaml 
 apiVersion: v1
 kind: Service
 metadata:
@@ -98,8 +98,8 @@ spec:
     - port: 5672
       targetPort: 5672
 
-##
-cat k8s/message-broker/rabbitmq-depl.yaml 
+## Contenido del fichero rabbitmq-depl.yaml
+nano /root/code/k8s/message-broker/rabbitmq-depl.yaml 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -118,8 +118,8 @@ spec:
         - name: rabbitmq
           image: rabbitmq
 
-##
-cat k8s/nginx/nginx-depl.yaml 
+## Conenido del fichero nginx-depl.yaml
+nano /root/code/k8s/nginx/nginx-depl.yaml 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -138,8 +138,8 @@ spec:
         - name: nginx
           image: nginx
 
-##
- cat k8s/nginx/nginx-service.yaml 
+## Contenido del fichero nginx-service.yaml
+nano /root/code/k8s/nginx/nginx-service.yaml 
 apiVersion: v1
 kind: Service
 metadata:
@@ -153,8 +153,8 @@ spec:
       targetPort: 80
   type: NodePort
 
-##
-cat k8s/kustomization.yaml 
+## Contenido del fichero kustomization.yaml. Este el contenido inicial del fichero. Conecta con los yaml de cada subdirectorio
+nano /root/code/k8s/kustomization.yaml 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 # kubernetes resources to be managed by kustomize
@@ -168,7 +168,7 @@ resources:
   - nginx/nginx-depl.yaml
   - nginx/nginx-service.yaml
 
-##
+## Este comando genera un yaml extenso que se puede desplegar, lo enlazamos con el kubectl
 kustomize build k8s/ | kubectl apply -f -
 configmap/db-credentials created
 configmap/redis-credentials created
@@ -179,7 +179,7 @@ deployment.apps/db-deployment created
 deployment.apps/nginx-deployment created
 deployment.apps/rabbitmq-deployment created
 
-##
+## Consultar los pods activos en el ns Default
 kubectl get pods -o wide 
 NAME                                   READY   STATUS    RESTARTS   AGE    IP           NODE           NOMINATED NODE   READINESS GATES
 db-deployment-6657f99d45-v4n9h         1/1     Running   0          115s   172.17.0.6   controlplane   <none>           <none>
@@ -188,40 +188,39 @@ nginx-deployment-57d574b95-5t44h       1/1     Running   0          115s   172.1
 nginx-deployment-57d574b95-7l4bg       1/1     Running   0          115s   172.17.0.5   controlplane   <none>           <none>
 rabbitmq-deployment-7d9fb68c75-hb68j   1/1     Running   0          115s   172.17.0.7   controlplane   <none>           <none>
 
-##
+## Con el fichero rabbitmq-service, consultar el tipo de servicio
 cat k8s/message-broker/rabbitmq-service.yaml | grep type
   type: ClusterIP
 
-##
+## Para la siguiente fase, vamos a usar varios ficheros de kustomization.yaml y el contenido del yaml de la raiz debe cambiar
 nano /root/code/k8s/db/kustomization.yaml
 nano /root/code/k8s/message-broker/kustomization.yaml
 nano /root/code/k8s/nginx/kustomization.yaml
 
-##
+## Contenido del fichero db/kustomization.yaml
 nano /root/code/k8s/db/kustomization.yaml
 resources:
   - db-depl.yaml
   - db-service.yaml
   - db-config.yaml
 
-##
+## Contenido del fichero message-broker/kustomization.yaml
 nano /root/code/k8s/message-broker/kustomization.yaml
 resources:
   - rabbitmq-config.yaml
   - rabbitmq-depl.yaml
   - rabbitmq-service.yaml
 
-##
+## Contenido del fichero nginx/kustomization.yaml
 nano /root/code/k8s/nginx/kustomization.yaml
 resources:
   - nginx-depl.yaml
   - nginx-service.yaml
 
-##
+##  Contenido del fichero k8s/kustomization.yaml
 nano /root/code/k8s/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 # kubernetes resources to be managed by kustomize
 resources:
   - db/
@@ -229,7 +228,7 @@ resources:
   - nginx/
 #Customizations that need to be made
 
-##
+## Nueva estructura del directorio de usuario y nuevo despliegue
 tree /root/
 /root/
 └── code
@@ -253,7 +252,7 @@ tree /root/
 
 5 directories, 13 files
 
-##
+## Reconstrucción del servicio de aplicaciones
 kustomize build k8s/ | kubectl apply -f -
 configmap/db-credentials created
 configmap/redis-credentials created
@@ -264,7 +263,7 @@ deployment.apps/db-deployment created
 deployment.apps/nginx-deployment created
 deployment.apps/rabbitmq-deployment created
 
-##
+## Volvemos a consultar los pods activos
 kubectl get pods -o wide 
 NAME                                   READY   STATUS    RESTARTS   AGE   IP            NODE           NOMINATED NODE   READINESS GATES
 db-deployment-6657f99d45-dhkrh         1/1     Running   0          62s   172.17.0.9    controlplane   <none>           <none>
