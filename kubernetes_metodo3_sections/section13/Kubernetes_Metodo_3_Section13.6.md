@@ -178,7 +178,7 @@ images:
     newTag: 2.4
 
 ## 111.5º También está la opción de cambiar/reemplazar la imagen y la versión a instalar. Equivale a: ["image: nginx","image: haproxy:2.4"]
-kustomization-5.yaml
+kustomization-7.yaml
 images:
   - name: nginx
     newName: haproxy
