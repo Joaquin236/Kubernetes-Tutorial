@@ -140,3 +140,35 @@ spec:
 nano kustomization-4.yaml
 annotations: 
   branch: master
+
+## 111.1º El mismo proceso de los transformers para los ficheros de despliegue se puede aplicar a las img de instalación. En el fichero de kustomization se añade parámetros para reemplazar el nombre que identifica la imagen, se declara el nombre de imagen antiguo y el nombre de imagen nuevo
+
+## 111.2º Muestra de fichero db-depl-2.yaml
+nano db-depl-2.yaml
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: api-deployment-dev
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      component: api
+      org: KodeKloud
+  template:
+    metadata:
+      labels:
+        component: api
+        org: KodeKloud
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+
+## 111.3º El fichero kustomization lleva los nombres de imagen
+kustomization-5.yaml
+images:
+  - name: nginx
+    newName: haproxy
+
+## 111.4º 
