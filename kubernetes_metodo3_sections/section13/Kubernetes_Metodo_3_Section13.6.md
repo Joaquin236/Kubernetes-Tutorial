@@ -171,4 +171,12 @@ images:
   - name: nginx
     newName: haproxy
 
-## 111.4º 
+## 111.4º Después de este cambio, el deploy que se iba a hacer con Nginx, se transforma en un despliegue con Haproxy. Todo el contenido también puede cambiar.
+
+## 111.5º Si queremos preservar la aplicación y la imagen pero cambiando la versión, tenemos que evitar el cambio de imagen y seleccionar el cambio de versión
+kustomization-6.yaml
+images:
+  - name: nginx
+    newTag: 2.4
+
+
