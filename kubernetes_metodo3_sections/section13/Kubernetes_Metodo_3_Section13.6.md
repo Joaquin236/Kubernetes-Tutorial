@@ -43,7 +43,7 @@ spec:
 
 ## 110.5º Listado de atributos del Kustomization_transformers
 - commonLabel: añade un label a todos los recursos de Kubernetes
-- namePrefix/Sufix: añade un prefijo o sufijo a todos los nombres de resursos
+- namePrefix/Suffix: añade un prefijo o sufijo a todos los nombres de resursos
 - Namespace: añade un namespace común a todos los recursos
 - commonAnnotations: añade una anotación a todos los recursos
 
@@ -65,8 +65,8 @@ spec:
     org: KodeKloud
   type: LoadBalancer
 
-## 110.7º Muestra de kustomization enlazado con el fichero de servicios
-nano kustomization.yaml
+## 110.7º Muestra de kustomization enlazado el commonLabel con el fichero de servicios-2
+nano kustomization-1.yaml
 commonLabel:
   org: KodeKloud
 
@@ -91,5 +91,52 @@ spec:
       org: KodeKloud
     type: LoadBalancer
 
-## 110.9º Muestra del kustomization.yaml
+## 110.9º Muestra del kustomization.yaml con el namespace enlazando con el fichero de servicios-3
+nano kustomization-3.yaml
 namespace: lab
+
+## 110.10º Muestra de fichero db-service-4.yaml
+nano db-service-4.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: KodeKloud-service-dev
+spec:
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 3000
+    selector:
+      compoment: api
+    type: LoadBalancer
+
+## 110.11º Enlazamos el kustomization con el prefijo y sufijo
+nano kustomization.yaml
+namePrefix: KodeKloud-
+nameSuffix: -dev
+
+## 110.12º Muestra de fichero db-service-5.yaml
+nano db-service-5.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: 
+    branch: master
+  labels:
+    org: KodeKloud
+  name: api-service
+  namespace: lab
+spec:
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 3000
+    selector:
+      compoment: api
+      org: KodeKloud
+    type: LoadBalancer
+
+## 110.13º 
+nano kustomization.yaml
+annotations: 
+  branch: master
