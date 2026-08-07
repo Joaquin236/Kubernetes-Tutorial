@@ -92,7 +92,7 @@ spec:
     type: LoadBalancer
 
 ## 110.9º Muestra del kustomization.yaml con el namespace enlazando con el fichero de servicios-3
-nano kustomization-3.yaml
+nano kustomization-2.yaml
 namespace: lab
 
 ## 110.10º Muestra de fichero db-service-4.yaml
@@ -111,7 +111,7 @@ spec:
     type: LoadBalancer
 
 ## 110.11º Enlazamos el kustomization con el prefijo y sufijo
-nano kustomization.yaml
+nano kustomization-3.yaml
 namePrefix: KodeKloud-
 nameSuffix: -dev
 
@@ -136,7 +136,7 @@ spec:
       org: KodeKloud
     type: LoadBalancer
 
-## 110.13º 
-nano kustomization.yaml
+## 110.13º El db-service-5 se enlaza con el branch del annotations
+nano kustomization-4.yaml
 annotations: 
   branch: master
