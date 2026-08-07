@@ -165,18 +165,21 @@ spec:
         - name: nginx
           image: nginx
 
-## 111.3º El fichero kustomization lleva los nombres de imagen
+## 111.3º El fichero kustomization lleva los nombres de imagen. Después de este cambio, el deploy que se iba a hacer con Nginx, se transforma en un despliegue con Haproxy. Todo el contenido también puede cambiar. Equivale a: ["image: nginx","image: haproxy"]
 kustomization-5.yaml
 images:
   - name: nginx
     newName: haproxy
 
-## 111.4º Después de este cambio, el deploy que se iba a hacer con Nginx, se transforma en un despliegue con Haproxy. Todo el contenido también puede cambiar.
-
-## 111.5º Si queremos preservar la aplicación y la imagen pero cambiando la versión, tenemos que evitar el cambio de imagen y seleccionar el cambio de versión
+## 111.4º Si queremos preservar la aplicación y la imagen pero cambiando la versión, tenemos que evitar el cambio de imagen y seleccionar el cambio de versión. Después del cambio se agrega la version fijada y no instalará la más nueva. Equivale a: ["image: nginx:2.4"]
 kustomization-6.yaml
 images:
   - name: nginx
     newTag: 2.4
 
-
+## 111.5º También está la opción de cambiar/reemplazar la imagen y la versión a instalar. Equivale a: ["image: nginx","image: haproxy:2.4"]
+kustomization-5.yaml
+images:
+  - name: nginx
+    newName: haproxy
+    newTag: 2.4
