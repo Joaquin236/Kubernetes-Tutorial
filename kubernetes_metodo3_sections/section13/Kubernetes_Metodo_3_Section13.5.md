@@ -182,11 +182,11 @@ deployment.apps/rabbitmq-deployment created
 ## Consultar los pods activos en el ns Default
 kubectl get pods -o wide 
 NAME                                   READY   STATUS    RESTARTS   AGE    IP           NODE           NOMINATED NODE   READINESS GATES
-db-deployment-6657f99d45-v4n9h         1/1     Running   0          115s   172.17.0.6   controlplane   <none>           <none>
-nginx-deployment-57d574b95-267hd       1/1     Running   0          115s   172.17.0.8   controlplane   <none>           <none>
-nginx-deployment-57d574b95-5t44h       1/1     Running   0          115s   172.17.0.4   controlplane   <none>           <none>
-nginx-deployment-57d574b95-7l4bg       1/1     Running   0          115s   172.17.0.5   controlplane   <none>           <none>
-rabbitmq-deployment-7d9fb68c75-hb68j   1/1     Running   0          115s   172.17.0.7   controlplane   <none>           <none>
+db-deployment-6657f99d45-v4n9h         1/1     Running   0          115s   172.17.0.6   controlplane   [none]           [none]
+nginx-deployment-57d574b95-267hd       1/1     Running   0          115s   172.17.0.8   controlplane   [none]           [none]
+nginx-deployment-57d574b95-5t44h       1/1     Running   0          115s   172.17.0.4   controlplane   [none]           [none]
+nginx-deployment-57d574b95-7l4bg       1/1     Running   0          115s   172.17.0.5   controlplane   [none]           [none]
+rabbitmq-deployment-7d9fb68c75-hb68j   1/1     Running   0          115s   172.17.0.7   controlplane   [none]           [none]
 
 ## Con el fichero rabbitmq-service, consultar el tipo de servicio
 cat k8s/message-broker/rabbitmq-service.yaml | grep type
@@ -266,9 +266,9 @@ deployment.apps/rabbitmq-deployment created
 ## Volvemos a consultar los pods activos
 kubectl get pods -o wide 
 NAME                                   READY   STATUS    RESTARTS   AGE   IP            NODE           NOMINATED NODE   READINESS GATES
-db-deployment-6657f99d45-dhkrh         1/1     Running   0          62s   172.17.0.9    controlplane   <none>           <none>
-nginx-deployment-57d574b95-7rl2v       1/1     Running   0          62s   172.17.0.11   controlplane   <none>           <none>
-nginx-deployment-57d574b95-8t2pd       1/1     Running   0          62s   172.17.0.10   controlplane   <none>           <none>
-nginx-deployment-57d574b95-pkr9s       1/1     Running   0          62s   172.17.0.12   controlplane   <none>           <none>
-rabbitmq-deployment-7d9fb68c75-4dr8b   1/1     Running   0          61s   172.17.0.13   controlplane   <none>           <none>
-rabbitmq-deployment-7d9fb68c75-cdqhk   1/1     Running   0          61s   172.17.0.14   controlplane   <none>           <none>
+db-deployment-6657f99d45-dhkrh         1/1     Running   0          62s   172.17.0.9    controlplane   [none]           [none]
+nginx-deployment-57d574b95-7rl2v       1/1     Running   0          62s   172.17.0.11   controlplane   [none]           [none]
+nginx-deployment-57d574b95-8t2pd       1/1     Running   0          62s   172.17.0.10   controlplane   [none]           [none]
+nginx-deployment-57d574b95-pkr9s       1/1     Running   0          62s   172.17.0.12   controlplane   [none]           [none]
+rabbitmq-deployment-7d9fb68c75-4dr8b   1/1     Running   0          61s   172.17.0.13   controlplane   [none]           [none]
+rabbitmq-deployment-7d9fb68c75-cdqhk   1/1     Running   0          61s   172.17.0.14   controlplane   [none]           [none]
