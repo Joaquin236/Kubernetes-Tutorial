@@ -110,11 +110,13 @@ spec:
               value: mypassword
 
 ## Edita el fichero de customización del directorio staging 
-nano /root/code/k8s/overlays/staging/kustomization.yaml 
+nano /root/code/k8s/overlays/staging/kustomization.yaml
+# Variables de los recursos con el directorio y fichero
 resources:
   - ../../base
   - mysql-depl.yaml
 
+# Variables de entorno
 labels:
   - pairs:
       environment: staging
