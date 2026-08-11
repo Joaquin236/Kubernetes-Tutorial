@@ -136,7 +136,7 @@ service/mysql-service created
 
 ## --> El servicio está conectado con éxito
 
---------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
 
 ## Consulta los pods del espacio de nombres gamma
 kubectl get pods -o wide -n gamma 
@@ -187,26 +187,28 @@ service/mysql-service created
 
 ## --> El servicio está conectado con éxito
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
-## 
+## Consulta los pods del ns delta
 kubectl get pods -n delta -o wide 
 NAME                            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
 mysql                           1/1     Running   0          2m59s   10.22.0.15   controlplane   <none>           <none>
 webapp-mysql-69867bff7d-ntd5m   1/1     Running   0          2m59s   10.22.0.16   controlplane   <none>           <none>
 
-##
+## Extrae el yaml del pod defectuoso-4
 kubectl get pods -n delta mysql -o yaml > mysql_service_file_4.yaml 
 nano mysql_service_file_4.yaml 
 
------------------------------------------------------------------------------------------------------------
+## --> Este cluster está fuera de servicio 
 
-##
+-------------------------------------------------------------------------------
+
+## Describe el pod mysql del ns epsilon y filtrar por MYSQL_ROOT_PASSWORD
 kubectl -n epsilon describe pod mysql  | grep MYSQL_ROOT_PASSWORD 
       MYSQL_ROOT_PASSWORD:  passwooooorrddd
 
-##
-kubectl get pods -n epsilon mysql -o yaml > mysql_service_file_5.yaml
+## Extrae el yaml del pod mysql defectuoso-5.1 y corrige el fallo 
+kubectl get pods -n epsilon mysql -o yaml > mysql_service_file_5.1.yaml
 nano mysql_service_file.yaml 
 apiVersion: v1
 kind: Pod
@@ -335,14 +337,14 @@ status:
   qosClass: BestEffort
   startTime: "2026-08-11T11:48:12Z"
 
-##
+## Borra el pod de mysql
 kubectl delete pods -n epsilon mysql 
 pod "mysql" deleted from epsilon namespace
 
 
-##
-kubectl get pods -n epsilon webapp-mysql-69867bff7d-km5f9 -o yaml > webapp_file.yaml
-nano webapp_file.yaml
+## Extrae el yaml del pod webapp defectuoso-5.2 y corrige el fallo
+kubectl get pods -n epsilon webapp-mysql-69867bff7d-km5f9 -o yaml > webapp_file_5.2.yaml
+nano webapp_file_5.2.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -480,7 +482,7 @@ status:
   qosClass: BestEffort
   startTime: "2026-08-11T11:48:12Z"
 
-##
+## Aplica los pods del mysql y webapp
 kubectl apply -f my_service_file.yaml ; kubectl apply -f webapp_file.yaml 
 pod/mysql created
 Warning: resource pods/webapp-mysql-69867bff7d-km5f9 is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
