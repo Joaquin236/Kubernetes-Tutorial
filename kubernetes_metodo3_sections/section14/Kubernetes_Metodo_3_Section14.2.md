@@ -1,10 +1,10 @@
-##
+## Listar los pods del espacios de nombres alpha
 kubectl get pods -o wide -n alpha 
 NAME                            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
 mysql                           1/1     Running   0          2m30s   10.22.0.9    controlplane   <none>           <none>
 webapp-mysql-6ddf84655d-rwplb   1/1     Running   0          2m30s   10.22.0.10   controlplane   <none>           <none>
 
-##
+## Obtener los deploy de todos los espacios de nombres
 kubectl get deployments.apps -A
 NAMESPACE     NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
 alpha         webapp-mysql             1/1     1            1           6m53s
@@ -13,7 +13,7 @@ kube-system   local-path-provisioner   1/1     1            1           13m
 kube-system   metrics-server           1/1     1            1           13m
 kube-system   traefik                  1/1     1            1           13m
 
-##
+## Extraer el yaml del servicio defectuoso-1 y editarlo para corregir el fallo
 kubectl get service -n alpha mysql -o yaml > mysql_service_file_1.yaml
 nano mysql_service_file_1.yaml
 apiVersion: v1
@@ -46,34 +46,35 @@ spec:
 status:
   loadBalancer: {}
 
-##
+## Borra el servicio defectuoso-1
 kubectl delete service -n alpha mysql 
 service "mysql" deleted from alpha namespace
 
-
-##
+## Relanza el servicio corregido-1
 kubectl apply -f mysql_service_file.yaml 
 service/mysql-service created
 
+## --> El servicio está conectado con éxito
+
 ------------------------------------------------------------
 
-##
+## Consultar los pods del espacio de nombres beta
 kubectl get pods -o wide -n beta 
 NAME                            READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
 mysql                           1/1     Running   0          53s   10.22.0.11   controlplane   <none>           <none>
 webapp-mysql-6ddf84655d-sxhpf   1/1     Running   0          53s   10.22.0.12   controlplane   <none>           <none>
 
-##
- kubectl get service -n beta web-service -o wide 
+## Consutlar el servicio del espacio de nombres beta (Servicio web)
+kubectl get service -n beta web-service -o wide 
 NAME          TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE     SELECTOR
 web-service   NodePort   10.43.146.36   <none>        8080:30081/TCP   3m17s   name=webapp-mysql
 
-##
+## Consutlar el servicio del espacio de nombres beta (Servicio de base de datos)
 kubectl get service -n beta mysql-service -o wide 
 NAME            TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE     SELECTOR
 mysql-service   ClusterIP   10.43.32.49   <none>        3306/TCP   4m47s   name=mysql
 
-##
+## Describir el servicio mysql-service alojado en el ns beta
 kubectl describe service -n beta mysql-service
 Name:                     mysql-service
 Namespace:                beta
@@ -92,7 +93,7 @@ Session Affinity:         None
 Internal Traffic Policy:  Cluster
 Events:                   <none>
 
-##
+## Extrae el yaml del mysql-service defectuoso-2 para corregirlo
 kubectl get services -n beta mysql-service -o yaml > mysql_service_file_2.yaml 
 nano mysql_service_file_2.yaml
 apiVersion: v1
@@ -125,23 +126,25 @@ spec:
 status:
   loadBalancer: {}
 
-##
+## Borra el servicio defectuoso-2
 kubectl delete services -n beta mysql-service
 service "mysql-service" deleted from beta namespace
 
-##
+## Relanza el servicio-2 corregido
 kubectl apply -f mysql_service_file.yaml 
 service/mysql-service created
 
+## --> El servicio está conectado con éxito
+
 --------------------------------------------------------------------------------------
 
-##
+## Consulta los pods del espacio de nombres gamma
 kubectl get pods -o wide -n gamma 
 NAME                            READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
 mysql                           1/1     Running   0          52s   10.22.0.13   controlplane   <none>           <none>
 webapp-mysql-6ddf84655d-pnqhf   1/1     Running   0          51s   10.22.0.14   controlplane   <none>           <none>
 
-##
+## Extrae el yaml del mysql-service defectuoso-3 del ns gamma y corregirlo 
 kubectl get service -n gamma mysql-service -o yaml > mysql_service_file_3.yaml 
 nano mysql_service_file_3.yaml 
 apiVersion: v1
@@ -174,17 +177,19 @@ spec:
 status:
   loadBalancer: {}
 
-##
+## Borra el servcicio defectuoso-3
 kubectl delete service -n gamma mysql-service
 service "mysql-service" deleted from gamma namespace
 
-##
+## Relanza el servicio corregido
 kubectl apply -f mysql_service_file.yaml 
 service/mysql-service created
 
-----------------------------------------------------------------------------------------------------------
+## --> El servicio está conectado con éxito
 
-##
+-----------------------------------------------------------------------------------------------------
+
+## 
 kubectl get pods -n delta -o wide 
 NAME                            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
 mysql                           1/1     Running   0          2m59s   10.22.0.15   controlplane   <none>           <none>
