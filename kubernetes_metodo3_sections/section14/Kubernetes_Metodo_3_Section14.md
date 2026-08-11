@@ -1,0 +1,1 @@
+## 116.1º Durante las estancias de los clusteres, existe la posibilidad de producirse fallas en el acceso, el cliente puede se afectado por un panel de error ["300","400","500"]. Necesitamos evaluar el entorno con los comandos de describir/logs del cluster, servicios y pods
