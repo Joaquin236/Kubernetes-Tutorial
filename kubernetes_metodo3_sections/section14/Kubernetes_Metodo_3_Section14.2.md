@@ -1,8 +1,8 @@
 ## Listar los pods del espacios de nombres alpha
 kubectl get pods -o wide -n alpha 
 NAME                            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
-mysql                           1/1     Running   0          2m30s   10.22.0.9    controlplane   <none>           <none>
-webapp-mysql-6ddf84655d-rwplb   1/1     Running   0          2m30s   10.22.0.10   controlplane   <none>           <none>
+mysql                           1/1     Running   0          2m30s   10.22.0.9    controlplane   [none]           [none]
+webapp-mysql-6ddf84655d-rwplb   1/1     Running   0          2m30s   10.22.0.10   controlplane   [none]           [none]
 
 ## Obtener los deploy de todos los espacios de nombres
 kubectl get deployments.apps -A
@@ -61,25 +61,25 @@ service/mysql-service created
 ## Consultar los pods del espacio de nombres beta
 kubectl get pods -o wide -n beta 
 NAME                            READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
-mysql                           1/1     Running   0          53s   10.22.0.11   controlplane   <none>           <none>
-webapp-mysql-6ddf84655d-sxhpf   1/1     Running   0          53s   10.22.0.12   controlplane   <none>           <none>
+mysql                           1/1     Running   0          53s   10.22.0.11   controlplane   [none]           [none]
+webapp-mysql-6ddf84655d-sxhpf   1/1     Running   0          53s   10.22.0.12   controlplane   [none]           [none]
 
 ## Consutlar el servicio del espacio de nombres beta (Servicio web)
 kubectl get service -n beta web-service -o wide 
 NAME          TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE     SELECTOR
-web-service   NodePort   10.43.146.36   <none>        8080:30081/TCP   3m17s   name=webapp-mysql
+web-service   NodePort   10.43.146.36   [none]        8080:30081/TCP   3m17s   name=webapp-mysql
 
 ## Consutlar el servicio del espacio de nombres beta (Servicio de base de datos)
 kubectl get service -n beta mysql-service -o wide 
 NAME            TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE     SELECTOR
-mysql-service   ClusterIP   10.43.32.49   <none>        3306/TCP   4m47s   name=mysql
+mysql-service   ClusterIP   10.43.32.49   [none]        3306/TCP   4m47s   name=mysql
 
 ## Describir el servicio mysql-service alojado en el ns beta
 kubectl describe service -n beta mysql-service
 Name:                     mysql-service
 Namespace:                beta
-Labels:                   <none>
-Annotations:              <none>
+Labels:                   [none]
+Annotations:              [none]
 Selector:                 name=mysql
 Type:                     ClusterIP
 IP Family Policy:         SingleStack
@@ -91,7 +91,7 @@ TargetPort:               8080/TCP
 Endpoints:                10.22.0.11:8080
 Session Affinity:         None
 Internal Traffic Policy:  Cluster
-Events:                   <none>
+Events:                   [none]
 
 ## Extrae el yaml del mysql-service defectuoso-2 para corregirlo
 kubectl get services -n beta mysql-service -o yaml > mysql_service_file_2.yaml 
@@ -141,8 +141,8 @@ service/mysql-service created
 ## Consulta los pods del espacio de nombres gamma
 kubectl get pods -o wide -n gamma 
 NAME                            READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
-mysql                           1/1     Running   0          52s   10.22.0.13   controlplane   <none>           <none>
-webapp-mysql-6ddf84655d-pnqhf   1/1     Running   0          51s   10.22.0.14   controlplane   <none>           <none>
+mysql                           1/1     Running   0          52s   10.22.0.13   controlplane   [none]           [none]
+webapp-mysql-6ddf84655d-pnqhf   1/1     Running   0          51s   10.22.0.14   controlplane   [none]           [none]
 
 ## Extrae el yaml del mysql-service defectuoso-3 del ns gamma y corregirlo 
 kubectl get service -n gamma mysql-service -o yaml > mysql_service_file_3.yaml 
@@ -192,14 +192,14 @@ service/mysql-service created
 ## Consulta los pods del ns delta
 kubectl get pods -n delta -o wide 
 NAME                            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
-mysql                           1/1     Running   0          2m59s   10.22.0.15   controlplane   <none>           <none>
-webapp-mysql-69867bff7d-ntd5m   1/1     Running   0          2m59s   10.22.0.16   controlplane   <none>           <none>
+mysql                           1/1     Running   0          2m59s   10.22.0.15   controlplane   [none]           [none]
+webapp-mysql-69867bff7d-ntd5m   1/1     Running   0          2m59s   10.22.0.16   controlplane   [none]           [none]
 
 ## Consultar los servicios del ns delta
 kubectl get service -n delta -o wide 
 NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE   SELECTOR
-mysql-service   ClusterIP   10.43.33.100    <none>        3306/TCP         62s   name=mysql
-web-service     NodePort    10.43.239.178   <none>        8080:30081/TCP   62s   name=webapp-mysql
+mysql-service   ClusterIP   10.43.33.100    [none]        3306/TCP         62s   name=mysql
+web-service     NodePort    10.43.239.178   [none]        8080:30081/TCP   62s   name=webapp-mysql
 
 ## Consultar el deploy del ns delta
 kubectl get deploy -n delta -o wide 
@@ -212,8 +212,8 @@ kubectl describe deploy -n delta | grep -A5 Environment
       DB_Host:      mysql-service
       DB_User:      sql-user # --> change the bad_name for [root]
       DB_Password:  paswrd
-    Mounts:         <none>
-  Volumes:          <none>
+    Mounts:         [none]
+  Volumes:          [none]
 
 ## Extrae el yaml del pod defectuoso-4 y editarlo
 kubectl get deploy -n delta webapp-mysql -o yaml > webapp-mysql_deploy_file_4.yaml 
@@ -314,8 +314,8 @@ kubectl describe deployments.apps -n epsilon | grep -A5 Environment
       DB_Host:      mysql-service
       DB_User:      sql-user # Change this value for [root]
       DB_Password:  paswrd
-    Mounts:         <none>
-  Volumes:          <none>
+    Mounts:         [none]
+  Volumes:          [none]
 
 ## Extrae el yaml del deploy del epsilon defectuoso-5.1 y corrige el fallo 
 kubectl get deployments.apps -n epsilon -o yaml > webapp-mysql_5.1.yaml
@@ -558,14 +558,14 @@ pod/mysql created
 ## Consultar los servicios activos en el ns zeta
 kubectl get service -n zeta -o wide 
 NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE     SELECTOR
-mysql-service   ClusterIP   10.43.219.80   <none>        3306/TCP         2m24s   name=mysql
-web-service     NodePort    10.43.12.108   <none>        8080:30088/TCP   2m24s   name=webapp-mysql # --> This port is wrong. The por to listen is [30081]
+mysql-service   ClusterIP   10.43.219.80   [none]        3306/TCP         2m24s   name=mysql
+web-service     NodePort    10.43.12.108   [none]        8080:30088/TCP   2m24s   name=webapp-mysql # --> This port is wrong. The por to listen is [30081]
 
 ## Consultar los pods en el ns zeta
 kubectl get pods -n zeta -o wide 
 NAME                            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
-mysql                           1/1     Running   0          3m46s   10.22.0.22   controlplane   <none>           <none>
-webapp-mysql-69867bff7d-trwz7   1/1     Running   0          3m45s   10.22.0.23   controlplane   <none>           <none>
+mysql                           1/1     Running   0          3m46s   10.22.0.22   controlplane   [none]           [none]
+webapp-mysql-69867bff7d-trwz7   1/1     Running   0          3m45s   10.22.0.23   controlplane   [none]           [none]
 
 ## Consultar el deploy del espacio de nombres zeta
 kubectl get deployments.apps -n zeta -o wide 
@@ -596,8 +596,8 @@ kubectl describe deploy -n zeta webapp-mysql | grep -A5 Env
       DB_Host:      mysql-service
       DB_User:      sql-user # --> Change this value for [root]
       DB_Password:  paswrd
-    Mounts:         <none>
-  Volumes:          <none>
+    Mounts:         [none]
+  Volumes:          [none]
 
 ## Extrae el yaml del deploy para corregirlo
 kubectl get deploy -n zeta webapp-mysql -o yaml > webapp-mysql_6.1.yaml
