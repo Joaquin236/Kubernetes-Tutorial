@@ -195,35 +195,161 @@ NAME                            READY   STATUS    RESTARTS   AGE     IP         
 mysql                           1/1     Running   0          2m59s   10.22.0.15   controlplane   <none>           <none>
 webapp-mysql-69867bff7d-ntd5m   1/1     Running   0          2m59s   10.22.0.16   controlplane   <none>           <none>
 
-## Extrae el yaml del pod defectuoso-4
-kubectl get pods -n delta mysql -o yaml > mysql_service_file_4.yaml 
-nano mysql_service_file_4.yaml 
+## Consultar los servicios del ns delta
+kubectl get service -n delta -o wide 
+NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE   SELECTOR
+mysql-service   ClusterIP   10.43.33.100    <none>        3306/TCP         62s   name=mysql
+web-service     NodePort    10.43.239.178   <none>        8080:30081/TCP   62s   name=webapp-mysql
 
-## --> Este cluster está fuera de servicio 
+## Consultar el deploy del ns delta
+kubectl get deploy -n delta -o wide 
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS     IMAGES                         SELECTOR
+webapp-mysql   1/1     1            1           2m16s   webapp-mysql   mmumshad/simple-webapp-mysql   name=webapp-mysql 
+
+## Describir el deploy del ns delta
+kubectl describe deploy -n delta | grep -A5 Environment
+    Environment:
+      DB_Host:      mysql-service
+      DB_User:      sql-user # --> change the bad_name for [root]
+      DB_Password:  paswrd
+    Mounts:         <none>
+  Volumes:          <none>
+
+## Extrae el yaml del pod defectuoso-4 y editarlo
+kubectl get deploy -n delta webapp-mysql -o yaml > webapp-mysql_deploy_file_4.yaml 
+
+nano webapp-mysql_deploy_file_4.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"name":"webapp-mysql"},"name":"webapp-mysql","namespace":"delta"},"spec":{"selector":{"matchLabels":{"name":"webapp-mysql"}},"template":{"metadata":{"labels":{"name":"webapp-mysql"},"name":"webapp-mysql"},"spec":{"containers":[{"env":[{"name":"DB_Host","value":"mysql-service"},{"name":"DB_User","value":"sql-user"},{"name":"DB_Password","value":"paswrd"}],"image":"mmumshad/simple-webapp-mysql","name":"webapp-mysql","ports":[{"containerPort":8080}]}]}}}}
+  creationTimestamp: "2026-08-12T09:32:19Z"
+  generation: 1
+  labels:
+    name: webapp-mysql
+  name: webapp-mysql
+  namespace: delta
+  resourceVersion: "1160"
+  uid: fd398fda-d4c5-4453-af4d-0b80f243ea74
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      name: webapp-mysql
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: webapp-mysql
+      name: webapp-mysql
+    spec:
+      containers:
+      - env:
+        - name: DB_Host
+          value: mysql-service
+        - name: DB_User
+          value: root
+        - name: DB_Password
+          value: paswrd
+        image: mmumshad/simple-webapp-mysql
+        imagePullPolicy: Always
+        name: webapp-mysql
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2026-08-12T09:32:21Z"
+    lastUpdateTime: "2026-08-12T09:32:21Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-08-12T09:32:19Z"
+    lastUpdateTime: "2026-08-12T09:32:21Z"
+    message: ReplicaSet "webapp-mysql-69867bff7d" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  terminatingReplicas: 0
+  updatedReplicas: 1
+
+## Aplica los cambios
+kubectl apply -f webapp-mysql_deploy_file_4.yaml 
+deployment.apps/webapp-mysql configured
+
+## --> El servicio está conectado con éxito
 
 -------------------------------------------------------------------------------
 
-## Describe el pod mysql del ns epsilon y filtrar por MYSQL_ROOT_PASSWORD
+## Consulta del deploy con el entorno de mysql defectuoso
+kubectl get deployments.apps -n epsilon -o wide 
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS     IMAGES                         SELECTOR
+webapp-mysql   1/1     1            1           7m55s   webapp-mysql   mmumshad/simple-webapp-mysql   name=webapp-mysql
+
+## Describe el deploy webapp-mysql y localiza algún defecto
+kubectl describe deployments.apps -n epsilon | grep -A5 Environment
+    Environment:
+      DB_Host:      mysql-service
+      DB_User:      sql-user # Change this value for [root]
+      DB_Password:  paswrd
+    Mounts:         <none>
+  Volumes:          <none>
+
+## Extrae el yaml del deploy del epsilon defectuoso-5.1 y corrige el fallo 
+kubectl get deployments.apps -n epsilon -o yaml > webapp-mysql_5.1.yaml
+
+## Edita el fichero
+nano webapp-mysql_5.1.yaml
+
+## Aplica el cambio
+kubectl apply -f webapp-mysql_5.1.yaml
+deployment.apps/webapp-mysql configured
+
+## Describe el pod mysql del ns epsilon y filtrar por MYSQL_ROOT_PASSWORD. El servicio necesita reparar un parámetro en el pod
 kubectl -n epsilon describe pod mysql  | grep MYSQL_ROOT_PASSWORD 
       MYSQL_ROOT_PASSWORD:  passwooooorrddd
 
-## Extrae el yaml del pod mysql defectuoso-5.1 y corrige el fallo 
-kubectl get pods -n epsilon mysql -o yaml > mysql_service_file_5.1.yaml
-nano mysql_service_file.yaml 
+## Extraer el yaml del pod mysql
+kubectl get pods -n epsilon mysql -o yaml > mysql_pod_5.2.yaml
+
+## Edita el fichero
+nano mysql_pod_5.2.yaml
 apiVersion: v1
 kind: Pod
 metadata:
   annotations:
     kubectl.kubernetes.io/last-applied-configuration: |
       {"apiVersion":"v1","kind":"Pod","metadata":{"annotations":{},"labels":{"name":"mysql"},"name":"mysql","namespace":"epsilon"},"spec":{"containers":[{"env":[{"name":"MYSQL_ROOT_PASSWORD","value":"passwooooorrddd"}],"image":"mysql:5.6","name":"mysql","ports":[{"containerPort":3306}]}]}}
-  creationTimestamp: "2026-08-11T11:48:12Z"
+  creationTimestamp: "2026-08-12T09:41:48Z"
   generation: 1
   labels:
     name: mysql
   name: mysql
   namespace: epsilon
-  resourceVersion: "2140"
-  uid: 7c5d994b-b322-41f4-be52-349c64ab57f6
+  resourceVersion: "1456"
+  uid: ece1dbf4-a6bc-48dc-89ba-61d733b157a7
 spec:
   containers:
   - env:
@@ -240,7 +366,7 @@ spec:
     terminationMessagePolicy: File
     volumeMounts:
     - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      name: kube-api-access-cfjnj
+      name: kube-api-access-28p5g
       readOnly: true
   dnsPolicy: ClusterFirst
   enableServiceLinks: true
@@ -263,7 +389,7 @@ spec:
     operator: Exists
     tolerationSeconds: 300
   volumes:
-  - name: kube-api-access-cfjnj
+  - name: kube-api-access-28p5g
     projected:
       defaultMode: 420
       sources:
@@ -284,32 +410,32 @@ spec:
 status:
   conditions:
   - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:13Z"
+    lastTransitionTime: "2026-08-12T09:41:49Z"
     observedGeneration: 1
     status: "True"
     type: PodReadyToStartContainers
   - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:12Z"
+    lastTransitionTime: "2026-08-12T09:41:48Z"
     observedGeneration: 1
     status: "True"
     type: Initialized
   - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:13Z"
+    lastTransitionTime: "2026-08-12T09:41:49Z"
     observedGeneration: 1
     status: "True"
     type: Ready
   - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:13Z"
+    lastTransitionTime: "2026-08-12T09:41:49Z"
     observedGeneration: 1
     status: "True"
     type: ContainersReady
   - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:12Z"
+    lastTransitionTime: "2026-08-12T09:41:48Z"
     observedGeneration: 1
     status: "True"
     type: PodScheduled
   containerStatuses:
-  - containerID: containerd://971857c1fe2ad518fe1603c3b805499f517c09338cf6d0f8ee30aca11a3168a5
+  - containerID: containerd://8f3b66dd1cda84db24aef60b09dada31307fefd734019d9b1fe8f722a17484fa
     image: docker.io/library/mysql:5.6
     imageID: docker.io/library/mysql@sha256:20575ecebe6216036d25dab5903808211f1e9ba63dc7825ac20cb975e34cfcae
     lastState: {}
@@ -320,181 +446,207 @@ status:
     started: true
     state:
       running:
-        startedAt: "2026-08-11T11:48:13Z"
+        startedAt: "2026-08-12T09:41:49Z"
     volumeMounts:
     - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      name: kube-api-access-cfjnj
+      name: kube-api-access-28p5g
       readOnly: true
       recursiveReadOnly: Disabled
-  hostIP: 10.244.220.199
+  hostIP: 10.244.147.148
   hostIPs:
-  - ip: 10.244.220.199
+  - ip: 10.244.147.148
   observedGeneration: 1
   phase: Running
   podIP: 10.22.0.18
   podIPs:
   - ip: 10.22.0.18
   qosClass: BestEffort
-  startTime: "2026-08-11T11:48:12Z"
+  startTime: "2026-08-12T09:41:48Z"
 
-## Borra el pod de mysql
+
+
+## Borra el pod para evitar el bloqueo de seguirad
 kubectl delete pods -n epsilon mysql 
 pod "mysql" deleted from epsilon namespace
 
+## Aplica los cambios
+kubectl apply -f mysql_pod_5.2.yaml 
+pod/mysql created
 
-## Extrae el yaml del pod webapp defectuoso-5.2 y corrige el fallo
-kubectl get pods -n epsilon webapp-mysql-69867bff7d-km5f9 -o yaml > webapp_file_5.2.yaml
-nano webapp_file_5.2.yaml
-apiVersion: v1
-kind: Pod
+## --> Este servicio está conectado con éxito
+
+-------------------------------------------------------
+
+## Consultar los servicios activos en el ns zeta
+kubectl get service -n zeta -o wide 
+NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE     SELECTOR
+mysql-service   ClusterIP   10.43.219.80   <none>        3306/TCP         2m24s   name=mysql
+web-service     NodePort    10.43.12.108   <none>        8080:30088/TCP   2m24s   name=webapp-mysql
+
+##
+kubectl get pods -n zeta -o wide 
+NAME                            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
+mysql                           1/1     Running   0          3m46s   10.22.0.22   controlplane   <none>           <none>
+webapp-mysql-69867bff7d-trwz7   1/1     Running   0          3m45s   10.22.0.23   controlplane   <none>           <none>
+
+##
+kubectl get deployments.apps -n zeta -o wide 
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS     IMAGES                         SELECTOR
+webapp-mysql   1/1     1            1           4m9s   webapp-mysql   mmumshad/simple-webapp-mysql   name=webapp-mysql
+
+##
+kubectl logs -n zeta pods/webapp-mysql-69867bff7d-trwz7 
+ * Serving Flask app "app" (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+ * Running on http://0.0.0.0:8080/ (Press CTRL+C to quit)
+
+##
+kubectl logs -n zeta pods/mysql | grep Warning
+2026-08-12 10:12:28 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2026-08-12 10:12:29 94 [Warning] InnoDB: New log files created, LSN=45781
+2026-08-12 10:12:29 94 [Warning] InnoDB: Creating foreign key constraint system tables.
+2026-08-12 10:12:30 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2026-08-12 10:12:33 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2026-08-12 10:12:33 142 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 558b3e39-9636-11f1-a107-da6b8f237342.
+
+##
+kubectl describe deploy -n zeta webapp-mysql | grep -A5 Env
+    Environment:
+      DB_Host:      mysql-service
+      DB_User:      sql-user # --> Change this value for [root]
+      DB_Password:  paswrd
+    Mounts:         <none>
+  Volumes:          <none>
+
+##
+kubectl get deploy -n zeta webapp-mysql -o yaml > weba
+pp-mysql_6.yaml
+
+##
+nano webapp-mysql_6.yaml
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  creationTimestamp: "2026-08-11T11:48:12Z"
-  generateName: webapp-mysql-69867bff7d-
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"name":"webapp-mysql"},"name":"webapp-mysql","namespace":"zeta"},"spec":{"selector":{"matchLabels":{"name":"webapp-mysql"}},"template":{"metadata":{"labels":{"name":"webapp-mysql"},"name":"webapp-mysql"},"spec":{"containers":[{"env":[{"name":"DB_Host","value":"mysql-service"},{"name":"DB_User","value":"sql-user"},{"name":"DB_Password","value":"paswrd"}],"image":"mmumshad/simple-webapp-mysql","name":"webapp-mysql","ports":[{"containerPort":8080}]}]}}}}
+  creationTimestamp: "2026-08-12T10:12:28Z"
   generation: 1
   labels:
     name: webapp-mysql
-    pod-template-hash: 69867bff7d
-  name: webapp-mysql-69867bff7d-km5f9
-  namespace: epsilon
-  ownerReferences:
-  - apiVersion: apps/v1
-    blockOwnerDeletion: true
-    controller: true
-    kind: ReplicaSet
-    name: webapp-mysql-69867bff7d
-    uid: d9a368ef-6e77-454f-982a-135ba4223235
-  resourceVersion: "2147"
-  uid: b605d60c-a01a-4103-8be0-a9386f4545bc
+  name: webapp-mysql
+  namespace: zeta
+  resourceVersion: "2170"
+  uid: 830d0a5c-ea4c-4a41-8d64-009d1828e1a1
 spec:
-  containers:
-  - env:
-    - name: DB_Host
-      value: mysql-service
-    - name: DB_User
-      value: root
-    - name: DB_Password
-      value: paswrd
-    image: mmumshad/simple-webapp-mysql
-    imagePullPolicy: Always
-    name: webapp-mysql
-    ports:
-    - containerPort: 8080
-      protocol: TCP
-    resources: {}
-    terminationMessagePath: /dev/termination-log
-    terminationMessagePolicy: File
-    volumeMounts:
-    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      name: kube-api-access-9cpxf
-      readOnly: true
-  dnsPolicy: ClusterFirst
-  enableServiceLinks: true
-  nodeName: controlplane
-  preemptionPolicy: PreemptLowerPriority
-  priority: 0
-  restartPolicy: Always
-  schedulerName: default-scheduler
-  securityContext: {}
-  serviceAccount: default
-  serviceAccountName: default
-  terminationGracePeriodSeconds: 30
-  tolerations:
-  - effect: NoExecute
-    key: node.kubernetes.io/not-ready
-    operator: Exists
-    tolerationSeconds: 300
-  - effect: NoExecute
-    key: node.kubernetes.io/unreachable
-    operator: Exists
-    tolerationSeconds: 300
-  volumes:
-  - name: kube-api-access-9cpxf
-    projected:
-      defaultMode: 420
-      sources:
-      - serviceAccountToken:
-          expirationSeconds: 3607
-          path: token
-      - configMap:
-          items:
-          - key: ca.crt
-            path: ca.crt
-          name: kube-root-ca.crt
-      - downwardAPI:
-          items:
-          - fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-            path: namespace
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      name: webapp-mysql
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: webapp-mysql
+      name: webapp-mysql
+    spec:
+      containers:
+      - env:
+        - name: DB_Host
+          value: mysql-service
+        - name: DB_User
+          value: root
+        - name: DB_Password
+          value: paswrd
+        image: mmumshad/simple-webapp-mysql
+        imagePullPolicy: Always
+        name: webapp-mysql
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
 status:
+  availableReplicas: 1
   conditions:
-  - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:14Z"
-    observedGeneration: 1
+  - lastTransitionTime: "2026-08-12T10:12:30Z"
+    lastUpdateTime: "2026-08-12T10:12:30Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
     status: "True"
-    type: PodReadyToStartContainers
-  - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:12Z"
-    observedGeneration: 1
+    type: Available
+  - lastTransitionTime: "2026-08-12T10:12:28Z"
+    lastUpdateTime: "2026-08-12T10:12:30Z"
+    message: ReplicaSet "webapp-mysql-69867bff7d" has successfully progressed.
+    reason: NewReplicaSetAvailable
     status: "True"
-    type: Initialized
-  - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:14Z"
-    observedGeneration: 1
-    status: "True"
-    type: Ready
-  - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:14Z"
-    observedGeneration: 1
-    status: "True"
-    type: ContainersReady
-  - lastProbeTime: null
-    lastTransitionTime: "2026-08-11T11:48:12Z"
-    observedGeneration: 1
-    status: "True"
-    type: PodScheduled
-  containerStatuses:
-  - containerID: containerd://d592172b64182a49a20f115fd2d7935bdf52543657437463fae7545f97dc520d
-    image: docker.io/mmumshad/simple-webapp-mysql:latest
-    imageID: docker.io/mmumshad/simple-webapp-mysql@sha256:d4d0c03fcb76cee6ae2511fa7f3f6b7090f0c5e0cb3f276687f9ddf2c689cc09
-    lastState: {}
-    name: webapp-mysql
-    ready: true
-    resources: {}
-    restartCount: 0
-    started: true
-    state:
-      running:
-        startedAt: "2026-08-11T11:48:14Z"
-    volumeMounts:
-    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      name: kube-api-access-9cpxf
-      readOnly: true
-      recursiveReadOnly: Disabled
-  hostIP: 10.244.220.199
-  hostIPs:
-  - ip: 10.244.220.199
+    type: Progressing
   observedGeneration: 1
-  phase: Running
-  podIP: 10.22.0.19
-  podIPs:
-  - ip: 10.22.0.19
-  qosClass: BestEffort
-  startTime: "2026-08-11T11:48:12Z"
+  readyReplicas: 1
+  replicas: 1
+  terminatingReplicas: 0
+  updatedReplicas: 1
 
-## Aplica los pods del mysql y webapp
-kubectl apply -f my_service_file.yaml ; kubectl apply -f webapp_file.yaml 
-pod/mysql created
-Warning: resource pods/webapp-mysql-69867bff7d-km5f9 is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
-The Pod "webapp-mysql-69867bff7d-km5f9" is invalid: spec: Forbidden: pod updates may not change fields other than `spec.containers[*].image`,`spec.initContainers[*].image`,`spec.activeDeadlineSeconds`,`spec.tolerations` (only additions to existing tolerations),`spec.terminationGracePeriodSeconds` (allow it to be set to 1 if it was previously negative)
-@@ -114,7 +114,7 @@
-     },
-     {
-      "Name": "DB_User",
--     "Value": "sql-user",
-+     "Value": "root",
-      "ValueFrom": null
-     },
-     {
+##
+kubectl apply -f webapp-mysql_6.yaml 
+deployment.apps/webapp-mysql configured
 
-## Task Skipped
+##
+kubectl get service -n zeta -o yaml web-service > web-service_6.2.yaml
+
+##
+nano web-service_6.2.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"web-service","namespace":"zeta"},"spec":{"ports":[{"nodePort":30088,"port":8080,"targetPort":8080}],"selector":{"name":"webapp-mysql"},"type":"NodePort"}}
+  creationTimestamp: "2026-08-12T10:12:28Z"
+  name: web-service
+  namespace: zeta
+  resourceVersion: "2152"
+  uid: aee24663-175e-4ba7-a6a3-329659b69477
+spec:
+  clusterIP: 10.43.12.108
+  clusterIPs:
+  - 10.43.12.108
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - nodePort: 30081
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    name: webapp-mysql
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
+
+##
+kubectl delete service -n zeta web-service 
+service "web-service" deleted from zeta namespace
+
+kubectl apply -f web-service_6.2.yaml 
+service/web-service created
