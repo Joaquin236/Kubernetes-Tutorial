@@ -9,11 +9,8 @@
 - 7 --> kubectl get pods -o=jsonpath=metadata.name --> ["nginx-pod"]
 - 8 --> kubectl get pods -o=jsonpatch=spec.nodeName --> ["node01"]
 - 9 --> kubectl get pods -o=jsonpatch=$.spec.containers[0] --> [{"image": "nginx:alpine","name": "nginx"}]
-- 10--> kubectl get pods -o=jsonpatch=
-- 11--> kubectl get pods -o=jsonpatch=
-- 12--> kubectl get pods -o=jsonpatch=
-- 13--> kubectl get pods -o=jsonpatch=
-- 14--> kubectl get pods -o=jsonpatch=
-
-
-
+- 10--> kubectl get pods -o=jsonpatch=$.spec.containers[0].image  --> ["nginx:alpine"]
+- 11--> kubectl get pods -o=jsonpatch=$.status.phase --> ["Pending"]
+- 12--> kubectl get pods -o=jsonpatch=$.status.containerStatuses.[1].state.waiting.reason --> ["ContainerCreating"]
+- 13--> kubectl get pods -o=jsonpatch=$.status.containerStatuses.[1].restartCount --> [2]
+- 14--> kubectl get pods -o=jsonpatch=$.status.containerStatuses.[1].restartCount --> [2]
