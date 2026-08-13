@@ -24,9 +24,13 @@
 
 ## 120.4º YAML
 Servers:
-   - name:
-     owner:
-     created:
-     status:
+   - name: 101010
+     owner: 1010111
+     created: 13-08-2000
+     status: active
 
-## 120.5º 
+## 120.5º Los elementos que llevan un guión ["-"] están siendo establecidos con un array. También se puede establecer diccionarios. La cabecera no tiene sangría, las claves internas llevan el espaciado. Cuando está mal situado el espaciado, desencadena un error en la sintaxis del fichero de configuración yaml. 
+
+## 120.6º Los diccionarios son con los contenidos desordenados, mientras las lista si están ordenadas. También se puede desarrollar una lista de diccionarios.
+
+## 120.7º El diccionario y el mapa son identicos, el array y la lista son diferentes
