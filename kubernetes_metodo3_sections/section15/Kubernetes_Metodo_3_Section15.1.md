@@ -12,4 +12,19 @@
 - 3. Formular la consulta de JSON_PATH    --> [.items[0].spec.containers[0].image]
 - 4. Realizar el comando completo --> [kubectl get pods -o=jsonpath={'.items[0].spec.containers[0].image'}
 
-## 119.6º
+## 119.6º En las líneas del intérprete de JSON la expresión ["\n"] es para crear lineas nuevas y ["\t"] para tabular los espacios
+kubectl get nodes -o=jsonpath='{.items[*].metadata.name}' --> master node01
+kubectl get nodes -o=jsonpath='{.items[*].status.nodeInfo.architecture}' --> amd64 amd64
+kubectl get nodes -o=jsonpath='{.items[*].status.capacity.cpu}' --> 4 4
+kubectl get nodes -o=jsonpath='{.items[*].metadata.name} {.items[*].status.capacity.cpu}' --> master node01 4 4
+kubectl get nodes -o=jsonpath='{.items[*].metadata.name} {"\n"} {.items[*].status.capacity.cpu}' --> master node01 "\n" 4 4
+kubectl get nodes -o=jsonpath='{.items[*].metadata.name} {"\t"} {.items[*].status.capacity.cpu}' --> master node01 "\t" 4 4
+------------------------------------------------------------------------------------------------------------------------
+for each node "\n" print node name "\t" print cpu count "\n" end for
+'{range .items[*]} "\n" {.metadata.name} {"\t"} {.status} {"\n"}'
+-------------------------------------------------------------------------------------------------------
+kubectl get nodes -o=jsonpath='{range.items[*]} {.metadata.name} {"\t"} {.items[*].status.capacity.cpu} {"\n"} {end}'
+-----------------------------------------------------------------------------------------------------------------------
+kubectl get nodes -o=custom-columns=NODE:.metadata.name,CPU:.status.capacity.cpu
+kubectl get nodes --sort-by=.metadata.name
+kubectl get nodes --sort-by=.status.capacity.cpu
