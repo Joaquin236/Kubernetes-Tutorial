@@ -1,30 +1,16 @@
-## 119.1º El contenido de los ficheros yaml y las consultas se pueden almacenar e interpretar como JSON, el objetivo de usar JSON es cuando hay muchos componentes que consultar en los despliegues.
+## Quiz de JSON Path_1 --> https://mmumshad.github.io/json-path-quiz/index.html#!/?questions=questionskub1
 
-## 119.2º Indexando en las claves de cada nivel de profundidad obtenemos los valores. En la consulta de nodos, pods, servicios, despliegues, la extración del yaml puede cambiarse por extraer el JSON, el comando de consultas muestra en pantalla una tabla con el contenido del yaml/JSON. Aunque el ["-o wide"] muestra más detalles, sigue siendo incompleto para una consulta profunda. 
-
-## 119.3º Algunos valores ausentes en la salida del comando son ["Cantidad_de_recursos","Condiciones_sobre_nodos","Arquitectura_Hardware","Imagen_usada"]. 
-
-## 119.4º Si queremos desarrollar un informe con forma de tabla con detalles que no se muestran en el kubectl get/describe. Necesitamos usar el JSON_Path. 
-
-## 119.5º Necesitamos 4 conceptos para desarrollar el informe
-- 1. Identificar el comando de consulta   --> [kubectl get *]
-- 2. Establecer la salida de formato JSON --> [-o JSON]
-- 3. Formular la consulta de JSON_PATH    --> [.items[0].spec.containers[0].image]
-- 4. Realizar el comando completo --> [kubectl get pods -o=jsonpath={'.items[0].spec.containers[0].image'}
-
-## 119.6º En las líneas del intérprete de JSON la expresión ["\n"] es para crear lineas nuevas y ["\t"] para tabular los espacios
-kubectl get nodes -o=jsonpath='{.items[*].metadata.name}' --> master node01
-kubectl get nodes -o=jsonpath='{.items[*].status.nodeInfo.architecture}' --> amd64 amd64
-kubectl get nodes -o=jsonpath='{.items[*].status.capacity.cpu}' --> 4 4
-kubectl get nodes -o=jsonpath='{.items[*].metadata.name} {.items[*].status.capacity.cpu}' --> master node01 4 4
-kubectl get nodes -o=jsonpath='{.items[*].metadata.name} {"\n"} {.items[*].status.capacity.cpu}' --> master node01 "\n" 4 4
-kubectl get nodes -o=jsonpath='{.items[*].metadata.name} {"\t"} {.items[*].status.capacity.cpu}' --> master node01 "\t" 4 4
-------------------------------------------------------------------------------------------------------------------------
-for each node "\n" print node name "\t" print cpu count "\n" end for
-'{range .items[*]} "\n" {.metadata.name} {"\t"} {.status} {"\n"}'
--------------------------------------------------------------------------------------------------------
-kubectl get nodes -o=jsonpath='{range.items[*]} {.metadata.name} {"\t"} {.items[*].status.capacity.cpu} {"\n"} {end}'
------------------------------------------------------------------------------------------------------------------------
-kubectl get nodes -o=custom-columns=NODE:.metadata.name,CPU:.status.capacity.cpu
-kubectl get nodes --sort-by=.metadata.name
-kubectl get nodes --sort-by=.status.capacity.cpu
+- 1 --> The Full JSON is a Dictionary
+- 2 --> The JSON have 4 objects
+- 3 --> The apiVersion field is a string value
+- 4 --> The metadata field is a dictionary object
+- 5 --> The containers field is a list of dictionaries
+- 6 --> kubectl get pods -o=jsonpath=kind --> ["Pod"]
+- 7 --> kubectl get pods -o=jsonpath=metadata.name --> ["nginx-pod"]
+- 8 --> kubectl get pods -o=jsonpatch=spec.nodeName --> ["node01"]
+- 9 --> kubectl get pods -o=jsonpatch=$.spec.containers[0] --> [{"image": "nginx:alpine","name": "nginx"}]
+- 10--> kubectl get pods -o=jsonpatch=$.spec.containers[0].image  --> ["nginx:alpine"]
+- 11--> kubectl get pods -o=jsonpatch=$.status.phase --> ["Pending"]
+- 12--> kubectl get pods -o=jsonpatch=$.status.containerStatuses.[1].state.waiting.reason --> ["ContainerCreating"]
+- 13--> kubectl get pods -o=jsonpatch=$.status.containerStatuses.[1].restartCount --> [2]
+- 14--> kubectl get pods -o=jsonpatch=$.status.containerStatuses.[1].restartCount --> [2]

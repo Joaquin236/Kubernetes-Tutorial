@@ -27,19 +27,19 @@
 
 7 directories, 16 files
 
-##
+## Localizar el valor de la clave sandbox
 grep sandbox /root/code/k8s/kustomization.yaml 
   sandbox: dev
 
-##
+## Filtrar el valor de la clave namePrefix
 grep namePrefix /root/code/k8s/db/kustomization.yaml 
 namePrefix: data-
 
-##
+## Localizar el espacio de nombre logging
 grep logging /root/code/k8s/monitoring/kustomization.yaml 
 namespace: logging
 
-##
+## Edita el fichero de customización para ofrecer los recursos necesarios desde el monitoring
 nano /root/code/k8s/monitoring/kustomization.yaml 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -53,7 +53,7 @@ namespace: logging
 commonAnnotations:
   owner: bob@gmail.com
 
-##
+## Edita el fichero de customización para ofrecer los recursos necesarios desde el nginx
 nano /root/code/k8s/nginx/kustomization.yaml 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -65,7 +65,7 @@ resources:
 commonAnnotations:
   owner: bob@gmail.com
 
-##
+## Compila el directorio y aplica los cambios
 kustomize build /root/code/k8s/ | kubectl apply -f -
 # Warning: 'commonLabels' is deprecated. Please use 'labels' instead. Run 'kustomize edit fix' to update your Kustomization automatically.
 configmap/data-db-credentials unchanged
@@ -78,7 +78,7 @@ deployment.apps/nginx-deployment configured
 Error from server (NotFound): error when creating "STDIN": namespaces "logging" not found
 Error from server (NotFound): error when creating "STDIN": namespaces "logging" not found
 
-##
+## Crea el fichero de customización en la raíz del directorio para los nuevos recursos
 nano /root/code/k8s/kustomization.yaml 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -95,7 +95,7 @@ images:
   - name: postgres
     newName: mysql
 
-##
+## Compila el directorio y aplica los cambios
 kustomize build /root/code/k8s/ | kubectl apply -f -
 # Warning: 'commonLabels' is deprecated. Please use 'labels' instead. Run 'kustomize edit fix' to update your Kustomization automatically.
 configmap/data-db-credentials unchanged
@@ -108,7 +108,7 @@ deployment.apps/nginx-deployment unchanged
 Error from server (NotFound): error when creating "STDIN": namespaces "logging" not found
 Error from server (NotFound): error when creating "STDIN": namespaces "logging" not found
 
-##
+## Añade las imagenes del servidor web y motor de la base de datos
 nano /root/code/k8s/kustomization.yaml 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -146,7 +146,7 @@ images:
     newName: nginx
     newTag: "1.23"
 
-##
+## Compila y aplica los cambios
 kustomize build /root/code/k8s/ | kubectl apply -f -
 # Warning: 'commonLabels' is deprecated. Please use 'labels' instead. Run 'kustomize edit fix' to update your Kustomization automatically.
 configmap/data-db-credentials unchanged
