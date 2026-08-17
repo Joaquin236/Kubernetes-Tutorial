@@ -68,7 +68,7 @@ spec:
       storage: 20Gi
 kubectl apply -f wordpress_persistent_vol_claim.yaml
 
-## 95.7º Muestra de ficehro de volumen persistente
+## 95.7º Muestra de fichero de volumen persistente
 nano wordpress_persistent_vol.yaml
 apiVersion: v1
 kind: PersistentVolume
